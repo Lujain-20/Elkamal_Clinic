@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { getDoctors, getDoctorPhotos } from "../services/doctorService";
 import type { Doctor, DoctorPhoto } from "../services/doctorService";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -65,7 +65,7 @@ function Icon({ name, size, fill, className }: IconProps) {
 }
 
 export default function ElkamalDentalClinic() {
-  const [lang, setLang] = useState("en");
+  
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loadingDoctors, setLoadingDoctors] = useState(true);
   const [doctorsError, setDoctorsError] = useState("");
