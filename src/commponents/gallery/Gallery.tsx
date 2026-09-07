@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "../home/Home.css";
 
 import { getDoctors, getDoctorPhotos } from "../services/doctorService";
 import type { Doctor, DoctorPhoto } from "../services/doctorService";
+
+import { useLanguage } from "../../i18n/LanguageContext";
 
 type GalleryCase = {
   id: string;
@@ -15,6 +18,23 @@ type GalleryCase = {
   afterImage: string;
 };
 
+interface IconProps {
+  name: string;
+  size?: number;
+  fill?: boolean;
+  className?: string;
+}
+
+function Icon({ name, size, fill, className }: IconProps) {
+  return (
+    <span
+      className={`icon material-symbols-outlined ${className || ""} ${fill ? "icon-fill" : ""} ${size ? `icon-size-${size}` : ""}`}
+    >
+      {name}
+    </span>
+  );
+}
+
 const badgeColors = [
   "bg-[#fed488] text-[#785a1a]",
   "bg-[#344966] text-[#d4e3ff]",
@@ -22,12 +42,11 @@ const badgeColors = [
 ];
 
 const formatSpecialty = (specialty: string) => {
-  // Splits stuck-together words like "RestorativeCosmetic"
-  // into "Restorative Cosmetic"
-  // by inserting a space before each capital letter
-  // that follows a lowercase letter.
   return specialty.replace(/([a-z])([A-Z])/g, "$1 $2");
 };
+
+
+
 
 const getBadgeColor = (specialty: string) => {
   let hash = 0;
@@ -41,6 +60,9 @@ const getBadgeColor = (specialty: string) => {
 
 export default function SmileTransformations() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+// const location = useLocation();
+
 
   const [doctorFilter, setDoctorFilter] = useState(
     searchParams.get("doctor") || "all"
@@ -53,18 +75,35 @@ export default function SmileTransformations() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
+  /*
+  =========================================================
+  LANGUAGE
+  =========================================================
+  */
+
+  const { lang, t } = useLanguage();
+
+  const isArabic = lang === "ar";
+
+
+
+
+  /*
+  =========================================================
+  LOAD GOOGLE FONTS
+  =========================================================
+  */
+
   useEffect(() => {
     const link1 = document.createElement("link");
 
     link1.rel = "stylesheet";
-
     link1.href =
       "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap";
 
     const link2 = document.createElement("link");
 
     link2.rel = "stylesheet";
-
     link2.href =
       "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap";
 
@@ -77,9 +116,11 @@ export default function SmileTransformations() {
     };
   }, []);
 
-  /* =========================================================
-     LOAD DOCTORS + THEIR PHOTOS
-  ========================================================= */
+  /*
+  =========================================================
+  LOAD DOCTORS + THEIR PHOTOS
+  =========================================================
+  */
 
   useEffect(() => {
     const loadGallery = async () => {
@@ -118,7 +159,9 @@ export default function SmileTransformations() {
           ({ doctor, photos }) =>
             photos
               .filter(
-                (photo) => photo.beforeImageUrl && photo.afterImageUrl
+                (photo) =>
+                  photo.beforeImageUrl &&
+                  photo.afterImageUrl
               )
               .map((photo) => ({
                 id: photo.id,
@@ -139,9 +182,7 @@ export default function SmileTransformations() {
       } catch (error) {
         console.error("Failed to load gallery:", error);
 
-        setLoadError(
-          "We couldn't load the gallery right now. Please try again later."
-        );
+        setLoadError(t("home.cases.error"));
       } finally {
         setLoading(false);
       }
@@ -150,9 +191,11 @@ export default function SmileTransformations() {
     loadGallery();
   }, []);
 
-  /* =========================================================
-     FILTER OPTIONS (derived from real data)
-  ========================================================= */
+  /*
+  =========================================================
+  FILTER OPTIONS
+  =========================================================
+  */
 
   const specialtyOptions = useMemo(() => {
     const unique = Array.from(
@@ -162,10 +205,17 @@ export default function SmileTransformations() {
     return unique;
   }, [doctors]);
 
+  /*
+  =========================================================
+  FILTER CASES
+  =========================================================
+  */
+
   const filteredCases = useMemo(() => {
     return cases.filter((item) => {
       const doctorMatches =
-        doctorFilter === "all" || item.doctorId === doctorFilter;
+        doctorFilter === "all" ||
+        item.doctorId === doctorFilter;
 
       const specialtyMatches =
         specialtyFilter === "all" ||
@@ -175,159 +225,122 @@ export default function SmileTransformations() {
     });
   }, [cases, doctorFilter, specialtyFilter]);
 
+  /*
+  =========================================================
+  RESET FILTERS
+  =========================================================
+  */
+
   const resetFilters = () => {
     setDoctorFilter("all");
     setSpecialtyFilter("all");
   };
 
+  /*
+  =========================================================
+  RENDER
+  =========================================================
+  */
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#fbf9f8] text-[#1b1c1c]">
-      {/* Header */}
-      {/* 
-      <header className="ek-header">
-        <div className="ek-container ek-header-inner">
+    <div
+      dir={isArabic ? "rtl" : "ltr"}
+      className="min-h-screen flex flex-col bg-[#fbf9f8] text-[#1b1c1c]"
+    >
+      {/* =====================================================
+          MAIN
+      ===================================================== */}
 
-          <div className="ek-header-left">
-
-            <button
-              className="ek-menu-btn lg-hidden"
-              aria-label="Menu"
-            >
-              <Icon name="menu" />
-            </button>
-
-            <a className="ek-logo" href="/">
-              <img
-                alt="ELKAMAL Dental Clinic Logo"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNcwU5RiVn0HTHmU2U1u3d1VTlRtOOXXjHxSBMjrL0LqFHxJ6fxbE7YlE4iBx9Nbz4gkweZ-5MZrjbDXzRMUYeEyuwLuA122Bm0uUpQy9DC5EaPq6WlYh2LP89NktybWVhANLT_xLkz40vzNxyAMJMCNVLplDyGtwlojYXTrLx2hEEuf0omuuKLQucZCYxgrS_u1RGTJ7Bm9x1MU4U0ZeoON9j-sitQxtawGIfOfPufWOsHVzPgePGCIulnAKsdx5UxYQ"
-              />
-
-              <span className="ek-logo-text md-block">
-                ELKAMAL
-              </span>
-            </a>
-
-          </div>
-
-          <div className="ek-header-right">
-
-            <nav className="ek-nav lg-flex">
-              <a href="/gallery">Cases</a>
-
-              <a href="/gallery" dir="rtl">
-                الحالات
-              </a>
-            </nav>
-
-            <div className="ek-lang-toggle sm-flex">
-
-              <button
-                className={lang === "en" ? "active" : ""}
-                onClick={() => setLang("en")}
-              >
-                En
-              </button>
-
-              <button
-                className={lang === "ar" ? "active" : ""}
-                onClick={() => setLang("ar")}
-              >
-                عربي
-              </button>
-
-            </div>
-
-            <button
-              className="btn btn-primary"
-              onClick={() => navigate("/booking")}
-            >
-              Book Appointment
-
-              <Icon
-                name="arrow_forward"
-                size={18}
-              />
-            </button>
-
-            <button
-              className="btn btn-primary"
-              onClick={() => navigate("/my-appointments")}
-            >
-              My Appointments
-
-              <Icon
-                name="arrow_forward"
-                size={18}
-              />
-            </button>
-
-          </div>
-
-        </div>
-      </header>
-      */}
-
-      {/* Main */}
       <main className="mx-auto w-full max-w-[1280px] flex-1 px-5 py-8 md:px-16">
-        {/* Heading */}
-        <section className="mb-8 text-center md:text-left">
+
+        {/* ===================================================
+            HEADING
+        =================================================== */}
+
+        <section
+          className={`mb-8 ${
+            isArabic
+              ? "text-center md:text-right"
+              : "text-center md:text-left"
+          }`}
+        >
           <h1 className="mb-2 font-['Manrope'] text-[32px] font-bold leading-tight tracking-tight text-[#1d324e] md:text-[48px]">
-            Smile Transformations
+            {t("gallery.title")}
           </h1>
 
           <p className="max-w-2xl text-lg leading-relaxed text-[#44474d]">
-            Witness the artistry and precision of our dental team.
-            Explore our gallery of beautiful, healthy smiles.
+            {t("gallery.description")}
           </p>
         </section>
 
-        {/* Filters */}
+        {/* ===================================================
+            FILTERS
+        =================================================== */}
+
         <section className="mb-10 flex flex-col items-stretch justify-between gap-4 rounded-xl border border-[#c4c6ce]/30 bg-[#fbf9f8]/80 p-4 shadow-[0_4px_20px_rgba(52,73,102,0.05)] backdrop-blur-md md:mb-20 md:flex-row md:items-end">
+
           <div className="flex flex-col gap-4 md:flex-row">
-            {/* Doctor */}
+
+            {/* DOCTOR FILTER */}
+
             <div className="w-full md:w-64">
               <label
                 htmlFor="doctor"
                 className="mb-2 block font-['Manrope'] text-sm font-semibold tracking-wider text-[#44474d]"
               >
-                Doctor
+                {t("gallery.doctor")}
               </label>
 
               <select
                 id="doctor"
                 value={doctorFilter}
-                onChange={(e) => setDoctorFilter(e.target.value)}
+                onChange={(e) =>
+                  setDoctorFilter(e.target.value)
+                }
                 className="w-full cursor-pointer rounded-md border border-[#c4c6ce] bg-[#fbf9f8] px-4 py-2.5 text-[#1b1c1c] outline-none transition focus:border-[#1d324e] focus:ring-1 focus:ring-[#1d324e]"
               >
-                <option value="all">All Doctors</option>
+                <option value="all">
+                  {t("gallery.allDoctors")}
+                </option>
 
                 {doctors.map((doctor) => (
-                  <option key={doctor.id} value={doctor.id}>
+                  <option
+                    key={doctor.id}
+                    value={doctor.id}
+                  >
                     {doctor.name}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Specialty */}
+            {/* TREATMENT FILTER */}
+
             <div className="w-full md:w-64">
               <label
                 htmlFor="specialty"
                 className="mb-2 block font-['Manrope'] text-sm font-semibold tracking-wider text-[#44474d]"
               >
-                Treatment
+                {t("gallery.treatment")}
               </label>
 
               <select
                 id="specialty"
                 value={specialtyFilter}
-                onChange={(e) => setSpecialtyFilter(e.target.value)}
+                onChange={(e) =>
+                  setSpecialtyFilter(e.target.value)
+                }
                 className="w-full cursor-pointer rounded-md border border-[#c4c6ce] bg-[#fbf9f8] px-4 py-2.5 text-[#1b1c1c] outline-none transition focus:border-[#1d324e] focus:ring-1 focus:ring-[#1d324e]"
               >
-                <option value="all">All Treatments</option>
+                <option value="all">
+                  {t("gallery.allTreatments")}
+                </option>
 
                 {specialtyOptions.map((specialty) => (
-                  <option key={specialty} value={specialty}>
+                  <option
+                    key={specialty}
+                    value={specialty}
+                  >
                     {formatSpecialty(specialty)}
                   </option>
                 ))}
@@ -335,7 +348,10 @@ export default function SmileTransformations() {
             </div>
           </div>
 
+          {/* RESET */}
+
           <button
+            type="button"
             onClick={resetFilters}
             className="flex items-center gap-2 self-end border-0 bg-transparent pb-1 font-['Manrope'] text-sm font-semibold text-[#775a19] transition-colors hover:text-[#1d324e]"
           >
@@ -343,33 +359,49 @@ export default function SmileTransformations() {
               refresh
             </span>
 
-            Reset Filters
+            {t("gallery.resetFilters")}
           </button>
         </section>
 
-        {/* Loading */}
+        {/* ===================================================
+            LOADING
+        =================================================== */}
+
         {loading && (
           <p className="py-12 text-center text-[#44474d]">
-            Loading gallery...
+            {t("gallery.loading")}
           </p>
         )}
 
-        {/* Error */}
+        {/* ===================================================
+            ERROR
+        =================================================== */}
+
         {!loading && loadError && (
           <div className="mb-10 rounded-xl border border-[#e3b6b6] bg-[#fbeaea] p-4 text-center text-[#9a3b3b]">
             {loadError}
           </div>
         )}
 
-        {/* Cards */}
+        {/* ===================================================
+            GALLERY CARDS
+        =================================================== */}
+
         {!loading && !loadError && (
           <section className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+
             {filteredCases.map((item) => (
               <article
                 key={item.id}
                 className="group flex flex-col overflow-hidden rounded-xl border border-[#c4c6ce]/30 bg-[#fbf9f8] shadow-[0_4px_20px_rgba(52,73,102,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(52,73,102,0.12)]"
               >
+
+                {/* BEFORE / AFTER */}
+
                 <div className="relative flex h-64 w-full">
+
+                  {/* BEFORE IMAGE */}
+
                   <div
                     className="h-full w-1/2 border-r border-[#fbf9f8] bg-cover bg-center"
                     style={{
@@ -377,12 +409,16 @@ export default function SmileTransformations() {
                     }}
                   />
 
+                  {/* AFTER IMAGE */}
+
                   <div
                     className="h-full w-1/2 border-l border-[#fbf9f8] bg-cover bg-center"
                     style={{
                       backgroundImage: `url(${item.afterImage})`,
                     }}
                   />
+
+                  {/* CENTER ICON */}
 
                   <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                     <div className="grid h-9 w-9 place-items-center rounded-full border border-[#c4c6ce]/20 bg-[#fbf9f8]/90 shadow-md backdrop-blur-sm">
@@ -392,17 +428,39 @@ export default function SmileTransformations() {
                     </div>
                   </div>
 
-                  <span className="absolute left-2 top-2 rounded bg-[#fbf9f8]/80 px-2 py-1 text-xs text-[#1b1c1c] backdrop-blur-sm">
-                    Before
+                  {/* BEFORE LABEL */}
+
+                  <span
+                    className={`absolute top-2 rounded bg-[#fbf9f8]/80 px-2 py-1 text-xs text-[#1b1c1c] backdrop-blur-sm ${
+                      isArabic ? "right-2" : "left-2"
+                    }`}
+                  >
+                    {t("gallery.before")}
                   </span>
 
-                  <span className="absolute right-2 top-2 rounded bg-[#fbf9f8]/80 px-2 py-1 text-xs text-[#1b1c1c] backdrop-blur-sm">
-                    After
+                  {/* AFTER LABEL */}
+
+                  <span
+                    className={`absolute top-2 rounded bg-[#fbf9f8]/80 px-2 py-1 text-xs text-[#1b1c1c] backdrop-blur-sm ${
+                      isArabic ? "left-2" : "right-2"
+                    }`}
+                  >
+                    {t("gallery.after")}
                   </span>
                 </div>
 
+                {/* CARD CONTENT */}
+
                 <div className="flex flex-1 flex-col p-4">
-                  <div className="mb-2 flex items-start justify-between gap-3">
+
+                  <div
+                    className={`mb-2 flex items-start justify-between gap-3 ${
+                      isArabic ? "flex-row-reverse" : ""
+                    }`}
+                  >
+
+                    {/* SPECIALTY */}
+
                     <span
                       className={`rounded-full px-2 py-1 text-[11px] uppercase tracking-wider ${getBadgeColor(
                         item.specialty
@@ -411,7 +469,15 @@ export default function SmileTransformations() {
                       {formatSpecialty(item.specialty)}
                     </span>
 
-                    <span className="flex items-center gap-1 text-right text-xs text-[#44474d]">
+                    {/* DOCTOR */}
+
+                    <span
+                      className={`flex items-center gap-1 text-xs text-[#44474d] ${
+                        isArabic
+                          ? "text-left"
+                          : "text-right"
+                      }`}
+                    >
                       <span className="material-symbols-outlined text-sm">
                         person
                       </span>
@@ -420,73 +486,103 @@ export default function SmileTransformations() {
                     </span>
                   </div>
 
-                  <p className="mb-4 flex-1 text-base leading-relaxed text-[#44474d]">
+                  {/* DESCRIPTION */}
+
+                  <p
+                    className={`mb-4 flex-1 text-base leading-relaxed text-[#44474d] ${
+                      isArabic
+                        ? "text-right"
+                        : "text-left"
+                    }`}
+                  >
                     {item.description}
                   </p>
                 </div>
               </article>
             ))}
+
           </section>
         )}
+
+        {/* ===================================================
+            NO RESULTS
+        =================================================== */}
 
         {!loading &&
           !loadError &&
           filteredCases.length === 0 && (
             <p className="mt-8 text-center text-[#44474d]">
-              No cases match the selected filters.
+              {t("gallery.noCases")}
             </p>
           )}
+
       </main>
 
-      {/* Footer */}
-      <footer className="mt-20 border-t border-[#c4c6ce]/30 bg-[#e4e2e1]">
-        <div className="mx-auto w-full max-w-[1280px] px-5 py-8 md:px-16">
-          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-            <div className="font-['Manrope'] text-2xl font-bold text-[#1d324e]">
-              ELKAMAL Dental Clinic
+      {/* =====================================================
+          FOOTER
+      ===================================================== */}
+
+     
+      <footer className="ek-footer">
+        <div className="ek-container ek-footer-grid">
+          <div className="ek-footer-brand">
+            <a href="#">
+              <img
+                alt="ELKAMAL Dental Clinic Logo"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjiHZ7i-qSZICLitRFThdvpmWw_IcS0yNrZTE4Ygr_z8smUf3mGaeY3jafdKomhjrTqSLRxWR_t_JcxT0GOOuIlCwb7DYU7fBtUdCLEnK7VjDnRWuVDMqZZ8LVs2_zj0O4gs3vjdBNfcHsfa8GiMrxUTcNRY8_I8Ssr98EyBpBgK2DcJHgXnsJ3m4CKF-RFOE4LU_39pJlhhO8Tk7UB5LpLogPnOM0sFFBZLWM21sFwOtxltifuqSEsXKYbESDwl7NoCo"
+              />
+            </a>
+            <p>{t("home.footer.brandDesc")}</p>
+            <div className="ek-footer-social">
+              <a aria-label="Facebook" href="#">
+                <Icon name="thumb_up" />
+              </a>
+              <a aria-label="Instagram" href="#">
+                <Icon name="photo_camera" />
+              </a>
             </div>
-
-            <nav className="flex flex-wrap justify-center gap-4">
-              <a
-                href="#services"
-                className="text-sm font-semibold text-[#44474d] hover:text-[#1d324e]"
-              >
-                Services
-              </a>
-
-              <a
-                href="#doctors"
-                className="text-sm font-semibold text-[#44474d] hover:text-[#1d324e]"
-              >
-                Our Doctors
-              </a>
-
-              <a
-                href="#contact"
-                className="text-sm font-semibold text-[#44474d] hover:text-[#1d324e]"
-              >
-                Contact Us
-              </a>
-
-              <a
-                href="#privacy"
-                className="text-sm font-semibold text-[#44474d] hover:text-[#1d324e]"
-              >
-                Privacy Policy
-              </a>
-
-              <a
-                href="#terms"
-                className="text-sm font-semibold text-[#44474d] hover:text-[#1d324e]"
-              >
-                Terms of Service
-              </a>
-            </nav>
           </div>
 
-          <p className="mt-6 text-center text-sm text-[#44474d]">
-            © 2024 ELKAMAL Dental Clinic. All Rights Reserved.
-          </p>
+         <div>
+            <h4 className="ek-footer-heading">{t("home.footer.quickLinks")}</h4>
+            <ul className="ek-footer-links">
+              <li><a href="#services" onClick={(e) => { e.preventDefault(); document.getElementById("services")?.scrollIntoView({ behavior: "smooth" }); }}>{t("home.footer.servicesLink")}</a></li>
+              <li><a href="#doctors" onClick={(e) => { e.preventDefault(); document.getElementById("doctors")?.scrollIntoView({ behavior: "smooth" }); }}>{t("home.footer.ourDoctorsLink")}</a></li>
+              <li><a href="/booking" onClick={(e) => { e.preventDefault(); navigate("/booking"); }}>{t("home.footer.bookAppointmentLink")}</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="ek-footer-heading">{t("home.footer.legal")}</h4>
+            <ul className="ek-footer-links">
+              <li><a href="#">{t("home.footer.privacyPolicy")}</a></li>
+              <li><a href="#">{t("home.footer.termsOfService")}</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="ek-footer-heading">{t("home.footer.contactUs")}</h4>
+            <ul className="ek-footer-contact">
+              <li>
+                <Icon name="location_on" />
+                <span>{t("header.clinicAddress")}</span>
+              </li>
+              <li>
+                <Icon name="call" />
+                <span>+1 (555) 123-4567</span>
+              </li>
+              <li>
+                <Icon name="mail" />
+                <span>info@elkamalclinic.com</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="ek-footer-bottom">
+          <div className="ek-footer-bottom-inner">
+            <p className="ek-footer-copy">{t("home.footer.copyright")}</p>
+          </div>
         </div>
       </footer>
     </div>

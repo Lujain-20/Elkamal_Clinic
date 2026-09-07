@@ -8,7 +8,7 @@ export default function Layout() {
 
   return (
     <div className="ek-root">
-      <Header lang={lang} setLang={setLang} />
+      <Header />
       {/* هنا بالظبط بيتحط محتوى أي صفحة (Home, BookAppointment...) */}
       <Outlet context={{ lang, setLang }} />
     </div>

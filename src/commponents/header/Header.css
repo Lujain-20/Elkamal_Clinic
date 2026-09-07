@@ -73,6 +73,30 @@
   color: var(--secondary-fixed-dim, #e9c176);
 }
 
+.ek-topbar-lang {
+  display: flex;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.ek-topbar-lang button {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-family: var(--font-display, "Manrope", sans-serif);
+  font-weight: 600;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.ek-topbar-lang button.active {
+  background-color: var(--secondary-fixed-dim, #e9c176);
+  color: var(--primary, #1d324e);
+}
+
 .ek-topbar-phone {
   display: flex;
   align-items: center;
@@ -173,26 +197,6 @@
 .ek-nav a:hover::after { width: 100%; }
 
 .ek-header-right { display: flex; align-items: center; gap: 20px; }
-
-.ek-lang-toggle {
-  display: none;
-  background-color: var(--surface-container-low, #f6f3f2);
-  border-radius: 999px;
-  padding: 4px;
-  border: 1px solid rgba(196, 198, 206, 0.5);
-}
-.ek-lang-toggle button {
-  padding: 6px 16px;
-  border-radius: 999px;
-  font-family: var(--font-display, "Manrope", sans-serif);
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--on-surface-variant, #44474d);
-}
-.ek-lang-toggle button.active {
-  background-color: var(--primary, #1d324e);
-  color: #ffffff;
-}
 
 /* =========================================================
    APPOINTMENTS DROPDOWN

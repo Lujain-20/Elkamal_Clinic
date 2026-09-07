@@ -1,30 +1,19 @@
-import { useEffect, useState } from "react";
+import  { useEffect,  useState } from "react";
 import { getDoctors, getDoctorPhotos } from "../services/doctorService";
 import type { Doctor, DoctorPhoto } from "../services/doctorService";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useLanguage } from "../../i18n/LanguageContext";
 import "./Home.css";
 
 
-const services = [
-  {
-    variant: "large",
-    icon: "dentistry",
-    title: "General Dentistry",
-    desc: "Routine check-ups, cleanings, and preventive care to maintain your perfect smile and overall oral health.",
-  },
-  {
-    variant: "cosmetic",
-    icon: "auto_awesome",
-    title: "Cosmetic Dentistry",
-    desc: "Veneers, teeth whitening, and complete smile makeovers.",
-  },
-  {
-    variant: "orthodontics",
-    icon: "health_and_beauty",
-    title: "Orthodontics",
-    desc: "Clear aligners and modern braces for perfect alignment.",
-  },
-];
+// Icon + translation-key pairs for the three small service
+// cards. Title/description text comes from t() at render time
+// so it updates instantly when the language changes.
+const serviceMeta = [
+  { id: "general", icon: "dentistry" },
+  { id: "cosmetic", icon: "auto_awesome" },
+  { id: "orthodontics", icon: "health_and_beauty" },
+] as const;
 
 type HomeCase = {
   id: string;
@@ -65,14 +54,15 @@ function Icon({ name, size, fill, className }: IconProps) {
 }
 
 export default function ElkamalDentalClinic() {
-  
+  const { t } = useLanguage();
+
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loadingDoctors, setLoadingDoctors] = useState(true);
-  const [doctorsError, setDoctorsError] = useState("");
+  const [doctorsError, setDoctorsError] = useState(false);
 
   const [cases, setCases] = useState<HomeCase[]>([]);
   const [loadingCases, setLoadingCases] = useState(true);
-  const [casesError, setCasesError] = useState("");
+  const [casesError, setCasesError] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -127,7 +117,7 @@ export default function ElkamalDentalClinic() {
       setDoctors(data);
     } catch (error) {
       console.error("Failed to fetch doctors:", error);
-      setDoctorsError("Failed to load doctors");
+      setDoctorsError(true);
     } finally {
       setLoadingDoctors(false);
     }
@@ -144,7 +134,7 @@ export default function ElkamalDentalClinic() {
     const fetchCases = async () => {
       try {
         setLoadingCases(true);
-        setCasesError("");
+        setCasesError(false);
 
         const doctorList = await getDoctors();
 
@@ -183,7 +173,7 @@ export default function ElkamalDentalClinic() {
         setCases(combined.slice(0, MAX_HOME_CASES));
       } catch (error) {
         console.error("Failed to load cases:", error);
-        setCasesError("Unable to load cases right now.");
+        setCasesError(true);
       } finally {
         setLoadingCases(false);
       }
@@ -212,24 +202,22 @@ export default function ElkamalDentalClinic() {
             <div className="ek-hero-copy">
               <div className="ek-hero-badge">
                 <Icon name="verified" size={16} />
-                <span>Premium Dental Care</span>
+                <span>{t("home.hero.badge")}</span>
               </div>
               <h1 className="ek-hero-title">
-                Your Smile,
+                {t("home.hero.titleLine1")}
                 <br />
-                <span>Our Expertise.</span>
+                <span>{t("home.hero.titleLine2")}</span>
               </h1>
               <p className="ek-hero-desc">
-                Experience premium dental care with our team of experienced specialists. We
-                provide personalized treatments in a modern, comfortable, and tranquil
-                environment designed for your peace of mind.
+                {t("home.hero.desc")}
               </p>
               <div className="ek-hero-actions">
                 <button
                   className="btn btn-primary btn-large"
                   onClick={() => navigate("/booking")}
                 >
-                  Book an Appointment
+                  {t("home.hero.bookBtn")}
                   <Icon name="calendar_month" size={20} />
                 </button>
                 <button
@@ -240,7 +228,7 @@ export default function ElkamalDentalClinic() {
     });
   }}
 >
-  Explore Services
+  {t("home.hero.exploreBtn")}
 </button>
               </div>
               
@@ -265,8 +253,8 @@ export default function ElkamalDentalClinic() {
                   <Icon name="workspace_premium" fill size={22} />
                 </div>
                 <div>
-                  <h3 className="ek-trust-title">Experienced Specialists</h3>
-                  <p className="ek-trust-sub">Expert care you can trust</p>
+                  <h3 className="ek-trust-title">{t("home.trust.specialistsTitle")}</h3>
+                  <p className="ek-trust-sub">{t("home.trust.specialistsSub")}</p>
                 </div>
               </div>
               <div className="ek-trust-item">
@@ -274,8 +262,8 @@ export default function ElkamalDentalClinic() {
                   <Icon name="medical_information" fill size={22} />
                 </div>
                 <div>
-                  <h3 className="ek-trust-title">Personalized Treatment</h3>
-                  <p className="ek-trust-sub">Tailored to your unique needs</p>
+                  <h3 className="ek-trust-title">{t("home.trust.treatmentTitle")}</h3>
+                  <p className="ek-trust-sub">{t("home.trust.treatmentSub")}</p>
                 </div>
               </div>
               <div className="ek-trust-item">
@@ -283,8 +271,8 @@ export default function ElkamalDentalClinic() {
                   <Icon name="spa" fill size={22} />
                 </div>
                 <div>
-                  <h3 className="ek-trust-title">Modern Environment</h3>
-                  <p className="ek-trust-sub">Comfort in every visit</p>
+                  <h3 className="ek-trust-title">{t("home.trust.environmentTitle")}</h3>
+                  <p className="ek-trust-sub">{t("home.trust.environmentSub")}</p>
                 </div>
               </div>
             </div>
@@ -294,10 +282,9 @@ export default function ElkamalDentalClinic() {
         {/* Services */}
         <section id="services" className="ek-section ek-container">
           <div className="ek-services-head">
-            <h2 className="ek-section-title">Comprehensive Dental Services</h2>
+            <h2 className="ek-section-title">{t("home.services.sectionTitle")}</h2>
             <p className="ek-section-desc">
-              We offer a full spectrum of premium dental treatments utilizing the latest
-              technology to ensure optimal oral health and aesthetics.
+              {t("home.services.sectionDesc")}
             </p>
           </div>
 
@@ -307,34 +294,34 @@ export default function ElkamalDentalClinic() {
               <div className="ek-service-decor" />
               <div className="ek-service-top">
                 <div className="ek-service-icon">
-                  <Icon name={services[0].icon} fill size={32} />
+                  <Icon name={serviceMeta[0].icon} fill size={32} />
                 </div>
               </div>
               <div className="ek-service-content">
-                <h3 className="ek-service-title">{services[0].title}</h3>
-                <p className="ek-service-desc">{services[0].desc}</p>
+                <h3 className="ek-service-title">{t(`home.services.${serviceMeta[0].id}.title`)}</h3>
+                <p className="ek-service-desc">{t(`home.services.${serviceMeta[0].id}.desc`)}</p>
               </div>
             </div>
 
             {/* Cosmetic Dentistry */}
             <div className="ek-service-card ek-service-cosmetic">
               <div className="ek-service-icon on-secondary">
-                <Icon name={services[1].icon} fill size={28} />
+                <Icon name={serviceMeta[1].icon} fill size={28} />
               </div>
               <div className="ek-service-content">
-                <h3 className="ek-service-title">{services[1].title}</h3>
-                <p className="ek-service-desc small">{services[1].desc}</p>
+                <h3 className="ek-service-title">{t(`home.services.${serviceMeta[1].id}.title`)}</h3>
+                <p className="ek-service-desc small">{t(`home.services.${serviceMeta[1].id}.desc`)}</p>
               </div>
             </div>
 
             {/* Orthodontics */}
             <div className="ek-service-card">
               <div className="ek-service-icon on-variant">
-                <Icon name={services[2].icon} fill size={28} />
+                <Icon name={serviceMeta[2].icon} fill size={28} />
               </div>
               <div className="ek-service-content">
-                <h3 className="ek-service-title">{services[2].title}</h3>
-                <p className="ek-service-desc small">{services[2].desc}</p>
+                <h3 className="ek-service-title">{t(`home.services.${serviceMeta[2].id}.title`)}</h3>
+                <p className="ek-service-desc small">{t(`home.services.${serviceMeta[2].id}.desc`)}</p>
               </div>
             </div>
 
@@ -351,10 +338,9 @@ export default function ElkamalDentalClinic() {
                 </div>
               </div>
               <div className="ek-service-restorative-copy ek-service-content">
-                <h3 className="ek-service-title">Restorative Dentistry</h3>
+                <h3 className="ek-service-title">{t("home.services.restorative.title")}</h3>
                 <p className="ek-service-desc">
-                  Implants, crowns, and bridges designed to flawlessly restore the function and
-                  natural beauty of your teeth.
+                  {t("home.services.restorative.desc")}
                 </p>
               </div>
             </div>
@@ -365,24 +351,23 @@ export default function ElkamalDentalClinic() {
         <section className="ek-section ek-container">
           <div className="ek-section-head">
             <div className="ek-content-narrow">
-              <h2 className="ek-section-title">Smile Transformations</h2>
+              <h2 className="ek-section-title">{t("home.cases.sectionTitle")}</h2>
               <p className="ek-section-desc">
-                Explore our curated selection of successful dental transformations and
-                life-changing results.
+                {t("home.cases.sectionDesc")}
               </p>
             </div>
             <button className="btn btn-primary" onClick={() => navigate("/gallery")}>
-              View All Cases
+              {t("home.cases.viewAll")}
               <Icon name="arrow_forward" size={18} />
             </button>
           </div>
 
-          {loadingCases && <p>Loading cases...</p>}
+          {loadingCases && <p>{t("home.cases.loading")}</p>}
 
-          {!loadingCases && casesError && <p>{casesError}</p>}
+          {!loadingCases && casesError && <p>{t("home.cases.error")}</p>}
 
           {!loadingCases && !casesError && cases.length === 0 && (
-            <p>No cases available yet.</p>
+            <p>{t("home.cases.empty")}</p>
           )}
 
           {!loadingCases && !casesError && cases.length > 0 && (
@@ -392,11 +377,11 @@ export default function ElkamalDentalClinic() {
                   <div className="ek-case-images">
                     <div className="ek-case-image-wrap">
                       <img src={c.before} alt="Before treatment" />
-                      <span className="ek-case-tag">Before</span>
+                      <span className="ek-case-tag">{t("home.cases.before")}</span>
                     </div>
                     <div className="ek-case-image-wrap">
                       <img src={c.after} alt="After treatment" />
-                      <span className="ek-case-tag after">After</span>
+                      <span className="ek-case-tag after">{t("home.cases.after")}</span>
                     </div>
                   </div>
                   <div className="ek-case-body">
@@ -417,7 +402,7 @@ export default function ElkamalDentalClinic() {
                           navigate(`/gallery?doctor=${c.doctorId}`);
                         }}
                       >
-                        View Doctor's Cases <Icon name="chevron_right" size={16} />
+                        {t("home.cases.viewDoctorCases")} <Icon name="chevron_right" size={16} />
                       </a>
                     </div>
                   </div>
@@ -432,10 +417,9 @@ export default function ElkamalDentalClinic() {
           <div className="ek-container">
             <div className="ek-section-head">
               <div className="ek-content-narrow">
-                <h2 className="ek-section-title">Meet Our Specialists</h2>
+                <h2 className="ek-section-title">{t("home.doctors.sectionTitle")}</h2>
                 <p className="ek-section-desc">
-                  Dedicated professionals committed to providing you with the highest standard
-                  of personalized clinical care.
+                  {t("home.doctors.sectionDesc")}
                 </p>
               </div>
               {/* <a className="ek-case-link ek-secondary-link" href="#">
@@ -445,9 +429,9 @@ export default function ElkamalDentalClinic() {
 
             <div className="ek-doctors-grid">
 
-  {loadingDoctors && <p>Loading doctors...</p>}
+  {loadingDoctors && <p>{t("home.doctors.loading")}</p>}
 
-  {doctorsError && <p>{doctorsError}</p>}
+  {doctorsError && <p>{t("home.doctors.error")}</p>}
 
   {!loadingDoctors &&
     !doctorsError &&
@@ -500,7 +484,7 @@ export default function ElkamalDentalClinic() {
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjiHZ7i-qSZICLitRFThdvpmWw_IcS0yNrZTE4Ygr_z8smUf3mGaeY3jafdKomhjrTqSLRxWR_t_JcxT0GOOuIlCwb7DYU7fBtUdCLEnK7VjDnRWuVDMqZZ8LVs2_zj0O4gs3vjdBNfcHsfa8GiMrxUTcNRY8_I8Ssr98EyBpBgK2DcJHgXnsJ3m4CKF-RFOE4LU_39pJlhhO8Tk7UB5LpLogPnOM0sFFBZLWM21sFwOtxltifuqSEsXKYbESDwl7NoCo"
               />
             </a>
-            <p>Providing premium, personalized dental care in a modern and tranquil environment.</p>
+            <p>{t("home.footer.brandDesc")}</p>
             <div className="ek-footer-social">
               <a aria-label="Facebook" href="#">
                 <Icon name="thumb_up" />
@@ -512,28 +496,28 @@ export default function ElkamalDentalClinic() {
           </div>
 
           <div>
-            <h4 className="ek-footer-heading">Quick Links</h4>
+            <h4 className="ek-footer-heading">{t("home.footer.quickLinks")}</h4>
             <ul className="ek-footer-links">
-              <li><a href="#">Services</a></li>
-              <li><a href="#">Our Doctors</a></li>
-              <li><a href="#">Book Appointment</a></li>
+              <li><a href="#services" onClick={(e) => { e.preventDefault(); document.getElementById("services")?.scrollIntoView({ behavior: "smooth" }); }}>{t("home.footer.servicesLink")}</a></li>
+              <li><a href="#doctors" onClick={(e) => { e.preventDefault(); document.getElementById("doctors")?.scrollIntoView({ behavior: "smooth" }); }}>{t("home.footer.ourDoctorsLink")}</a></li>
+              <li><a href="/booking" onClick={(e) => { e.preventDefault(); navigate("/booking"); }}>{t("home.footer.bookAppointmentLink")}</a></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="ek-footer-heading">Legal</h4>
+            <h4 className="ek-footer-heading">{t("home.footer.legal")}</h4>
             <ul className="ek-footer-links">
-              <li><a href="#">Privacy Policy</a></li>
-              <li><a href="#">Terms of Service</a></li>
+              <li><a href="#">{t("home.footer.privacyPolicy")}</a></li>
+              <li><a href="#">{t("home.footer.termsOfService")}</a></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="ek-footer-heading">Contact Us</h4>
+            <h4 className="ek-footer-heading">{t("home.footer.contactUs")}</h4>
             <ul className="ek-footer-contact">
               <li>
                 <Icon name="location_on" />
-                <span>123 Clinical Avenue, Medical District</span>
+                <span>{t("header.clinicAddress")}</span>
               </li>
               <li>
                 <Icon name="call" />
@@ -549,7 +533,7 @@ export default function ElkamalDentalClinic() {
 
         <div className="ek-footer-bottom">
           <div className="ek-footer-bottom-inner">
-            <p className="ek-footer-copy">© 2024 ELKAMAL Dental Clinic. All Rights Reserved.</p>
+            <p className="ek-footer-copy">{t("home.footer.copyright")}</p>
           </div>
         </div>
       </footer>

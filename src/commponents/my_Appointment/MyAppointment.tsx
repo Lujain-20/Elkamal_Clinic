@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  
   Calendar,
   Clock,
   Phone,
@@ -17,23 +16,30 @@ import {
 
 import type { Appointment } from "../services/appointmentService";
 
+import { useLanguage } from "../../i18n/LanguageContext";
+
 import "./MyAppointment.css";
 
 /* =========================================================
    HELPERS
 ========================================================= */
 
-const formatDateTime = (scheduledAt: string) => {
+const formatDateTime = (
+  scheduledAt: string,
+  lang: "en" | "ar"
+) => {
   const date = new Date(scheduledAt);
 
-  const dateLabel = date.toLocaleDateString("en-US", {
+  const locale = lang === "ar" ? "ar-EG" : "en-US";
+
+  const dateLabel = date.toLocaleDateString(locale, {
     weekday: "short",
     month: "long",
     day: "numeric",
     year: "numeric",
   });
 
-  const timeLabel = date.toLocaleTimeString("en-US", {
+  const timeLabel = date.toLocaleTimeString(locale, {
     hour: "numeric",
     minute: "2-digit",
   });
@@ -44,19 +50,19 @@ const formatDateTime = (scheduledAt: string) => {
   };
 };
 
-const formatAppointmentType = (type: string) => {
+const getAppointmentTypeKey = (type: string) => {
   switch (type) {
     case "Checkup":
-      return "General Checkup";
+      return "generalCheckup";
 
     case "TreatmentSession":
-      return "Treatment Session";
+      return "treatmentSession";
 
     case "OrthodonticFollowUp":
-      return "Orthodontic Follow-up";
+      return "orthodonticFollowUp";
 
     default:
-      return type;
+      return null;
   }
 };
 
@@ -93,44 +99,88 @@ const getStatusKind = (status: string): StatusKind => {
   }
 };
 
-const statusLabel: Record<StatusKind, string> = {
-  pending: "Pending confirmation",
-  confirmed: "Confirmed",
-  completed: "Completed",
-  cancelled: "Cancelled",
-  declined: "Declined",
-};
-
 /* =========================================================
    COMPONENT
 ========================================================= */
 
 function MyAppointments() {
+  const { lang, t } = useLanguage();
+
+  const isArabic = lang === "ar";
+
+  /* =========================================================
+     STATE
+  ========================================================= */
+
   const [phoneNumber, setPhoneNumber] = useState("");
 
-  const [hasSearched, setHasSearched] = useState(false);
+  const [hasSearched, setHasSearched] =
+    useState(false);
 
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [appointments, setAppointments] =
+    useState<Appointment[]>([]);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] =
+    useState(false);
 
-  const [searchError, setSearchError] = useState("");
+  const [searchError, setSearchError] =
+    useState("");
 
-  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [cancellingId, setCancellingId] =
+    useState<string | null>(null);
 
-  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [confirmingId, setConfirmingId] =
+    useState<string | null>(null);
 
-  const [cancelError, setCancelError] = useState("");
+  const [cancelError, setCancelError] =
+    useState("");
+
+  /* =========================================================
+     STATUS LABEL
+  ========================================================= */
+
+  const getStatusLabel = (
+    status: string
+  ) => {
+    const statusKind =
+      getStatusKind(status);
+
+    return t(
+      `home.myAppointments.status.${statusKind}`
+    );
+  };
+
+  /* =========================================================
+     APPOINTMENT TYPE LABEL
+  ========================================================= */
+
+  const getAppointmentTypeLabel = (
+    type: string
+  ) => {
+    const key =
+      getAppointmentTypeKey(type);
+
+    if (!key) return type;
+
+    return t(
+      `home.myAppointments.appointmentTypes.${key}`
+    );
+  };
 
   /* =========================================================
      SEARCH
   ========================================================= */
 
   const handleSearch = async () => {
-    const trimmedPhone = phoneNumber.trim();
+    const trimmedPhone =
+      phoneNumber.trim();
 
     if (!trimmedPhone) {
-      setSearchError("Please enter your phone number.");
+      setSearchError(
+        t(
+          "home.myAppointments.errors.enterPhone"
+        )
+      );
       return;
     }
 
@@ -138,25 +188,37 @@ function MyAppointments() {
       setLoading(true);
 
       setSearchError("");
-
       setCancelError("");
 
-      const data = await getAppointmentsByPhone(trimmedPhone);
+      const data =
+        await getAppointmentsByPhone(
+          trimmedPhone
+        );
 
-      const sorted = [...data].sort(
-        (a, b) =>
-          new Date(b.scheduledAt).getTime() -
-          new Date(a.scheduledAt).getTime()
-      );
+      const sorted =
+        [...data].sort(
+          (a, b) =>
+            new Date(
+              b.scheduledAt
+            ).getTime() -
+            new Date(
+              a.scheduledAt
+            ).getTime()
+        );
 
       setAppointments(sorted);
 
       setHasSearched(true);
     } catch (error) {
-      console.error("Failed to load appointments:", error);
+      console.error(
+        "Failed to load appointments:",
+        error
+      );
 
       setSearchError(
-        "We couldn't find appointments for this number. Please check it and try again."
+        t(
+          "home.myAppointments.errors.searchFailed"
+        )
       );
 
       setAppointments([]);
@@ -166,6 +228,10 @@ function MyAppointments() {
       setLoading(false);
     }
   };
+
+  /* =========================================================
+     ENTER KEY
+  ========================================================= */
 
   const handleKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement>
@@ -197,71 +263,88 @@ function MyAppointments() {
      CANCEL
   ========================================================= */
 
-  const handleConfirmCancel = async (
-    appointmentId: string
-  ) => {
-    try {
-      setCancellingId(appointmentId);
+  const handleConfirmCancel =
+    async (
+      appointmentId: string
+    ) => {
+      try {
+        setCancellingId(
+          appointmentId
+        );
 
-      setCancelError("");
+        setCancelError("");
 
-      await cancelAppointment(appointmentId);
+        await cancelAppointment(
+          appointmentId
+        );
 
-      setAppointments((prev) =>
-        prev.map((appt) =>
-          appt.id === appointmentId
-            ? {
-                ...appt,
-                status: "Cancelled",
-              }
-            : appt
-        )
-      );
+        setAppointments(
+          (prev) =>
+            prev.map(
+              (appt) =>
+                appt.id ===
+                appointmentId
+                  ? {
+                      ...appt,
+                      status:
+                        "Cancelled",
+                    }
+                  : appt
+            )
+        );
 
-      setConfirmingId(null);
-    } catch (error: any) {
-      console.error(
-        "Failed to cancel appointment:",
-        error
-      );
+        setConfirmingId(null);
+      } catch (error: any) {
+        console.error(
+          "Failed to cancel appointment:",
+          error
+        );
 
-      const backendMessage =
-        error?.response?.data?.message;
+        const backendMessage =
+          error?.response?.data
+            ?.message;
 
-      setCancelError(
-        backendMessage ||
-          "Unable to cancel this appointment right now. Please try again."
-      );
+        setCancelError(
+          backendMessage ||
+            t(
+              "home.myAppointments.errors.cancelFailed"
+            )
+        );
 
-      setConfirmingId(null);
-    } finally {
-      setCancellingId(null);
-    }
-  };
+        setConfirmingId(null);
+      } finally {
+        setCancellingId(null);
+      }
+    };
 
   /* =========================================================
      RENDER
   ========================================================= */
 
   return (
-    <div className="myappt-page min-h-screen flex flex-col">
-      {/* =====================================================
-          INTERNAL PAGE HEADER
-      ===================================================== */}
-
-
+    <div
+      className="myappt-page min-h-screen flex flex-col"
+      dir={
+        isArabic
+          ? "rtl"
+          : "ltr"
+      }
+    >
       {/* =====================================================
           MAIN
       ===================================================== */}
 
       <main className="flex-grow pb-16">
+
         {/* ===================================================
             SEARCH STATE
         =================================================== */}
 
         {!hasSearched && (
           <section className="px-5 pt-10 pb-16">
+
             <div className="myappt-search-card max-w-[600px] mx-auto">
+
               {/* Icon */}
 
               <div className="mx-auto w-16 h-16 rounded-full bg-[#eef3f7] flex items-center justify-center mb-6">
@@ -274,25 +357,36 @@ function MyAppointments() {
               {/* Heading */}
 
               <h2 className="text-[24px] font-semibold text-[#1d324e]">
-                Find your appointments
+                {t(
+                  "home.myAppointments.title"
+                )}
               </h2>
 
               {/* Description */}
 
               <p className="text-[14px] text-[#74777e] mt-2 leading-6 max-w-[480px] mx-auto">
-                Enter the phone number you used when
-                booking to see your appointment history
-                and status.
+                {t(
+                  "home.myAppointments.description"
+                )}
               </p>
 
               {/* Form */}
 
-              <div className="mt-8 text-left">
+              <div
+                className={`mt-8 ${
+                  isArabic
+                    ? "text-right"
+                    : "text-left"
+                }`}
+              >
+
                 <label
                   htmlFor="lookupPhone"
                   className="block text-[13px] font-semibold text-[#1d324e] mb-2"
                 >
-                  Phone Number
+                  {t(
+                    "home.myAppointments.phoneNumber"
+                  )}
                 </label>
 
                 <input
@@ -302,10 +396,16 @@ function MyAppointments() {
                   autoComplete="tel"
                   value={phoneNumber}
                   onChange={(e) =>
-                    setPhoneNumber(e.target.value)
+                    setPhoneNumber(
+                      e.target.value
+                    )
                   }
-                  onKeyDown={handleKeyDown}
-                  placeholder="01xxxxxxxxx"
+                  onKeyDown={
+                    handleKeyDown
+                  }
+                  placeholder={t(
+                    "home.myAppointments.phonePlaceholder"
+                  )}
                   className="myappt-phone-input"
                 />
 
@@ -322,7 +422,9 @@ function MyAppointments() {
 
               <button
                 type="button"
-                onClick={handleSearch}
+                onClick={
+                  handleSearch
+                }
                 disabled={loading}
                 className="myappt-search-button mt-5"
               >
@@ -330,18 +432,25 @@ function MyAppointments() {
 
                 <span>
                   {loading
-                    ? "Searching..."
-                    : "View My Appointments"}
+                    ? t(
+                        "home.myAppointments.searching"
+                      )
+                    : t(
+                        "home.myAppointments.viewAppointments"
+                      )}
                 </span>
               </button>
 
-              {/* Small helper */}
+              {/* Helper */}
 
               <p className="myappt-helper-text">
-                Use the same phone number you entered
-                during booking.
+                {t(
+                  "home.myAppointments.helper"
+                )}
               </p>
+
             </div>
+
           </section>
         )}
 
@@ -351,13 +460,24 @@ function MyAppointments() {
 
         {hasSearched && (
           <section className="px-5 pt-8">
+
             <div className="max-w-[900px] mx-auto">
+
               {/* Results Header */}
 
-              <div className="myappt-results-header flex items-center justify-between mb-6">
+              <div
+                className={`myappt-results-header flex items-center justify-between mb-6 gap-4 ${
+                  isArabic
+                    ? "flex-row-reverse"
+                    : ""
+                }`}
+              >
+
                 <div>
                   <p className="text-[12px] uppercase tracking-wider font-semibold text-[#74777e]">
-                    Showing results for
+                    {t(
+                      "home.myAppointments.showingResultsFor"
+                    )}
                   </p>
 
                   <p className="text-[16px] font-semibold text-[#1d324e] mt-1">
@@ -367,11 +487,16 @@ function MyAppointments() {
 
                 <button
                   type="button"
-                  onClick={handleNewSearch}
+                  onClick={
+                    handleNewSearch
+                  }
                   className="myappt-new-search-button"
                 >
-                  Search another number
+                  {t(
+                    "home.myAppointments.searchAnother"
+                  )}
                 </button>
+
               </div>
 
               {/* Cancel Error */}
@@ -386,25 +511,33 @@ function MyAppointments() {
 
               {loading && (
                 <div className="myappt-message-card">
+
                   <div className="myappt-loading-icon">
                     <Search size={22} />
                   </div>
 
                   <p className="text-[15px] font-semibold text-[#1d324e]">
-                    Loading your appointments...
+                    {t(
+                      "home.myAppointments.loading"
+                    )}
                   </p>
 
                   <p className="text-[13px] text-[#74777e] mt-1">
-                    Please wait a moment.
+                    {t(
+                      "home.myAppointments.pleaseWait"
+                    )}
                   </p>
+
                 </div>
               )}
 
               {/* No appointments */}
 
               {!loading &&
-                appointments.length === 0 && (
+                appointments.length ===
+                  0 && (
                   <div className="myappt-message-card">
+
                     <div className="mx-auto w-14 h-14 rounded-full bg-[#f0eded] flex items-center justify-center mb-4">
                       <Calendar
                         size={24}
@@ -413,193 +546,268 @@ function MyAppointments() {
                     </div>
 
                     <p className="text-[16px] font-semibold text-[#1d324e]">
-                      No appointments found
+                      {t(
+                        "home.myAppointments.noAppointments"
+                      )}
                     </p>
 
                     <p className="text-[13px] text-[#74777e] mt-2 max-w-[400px] mx-auto leading-6">
-                      We couldn't find any bookings for
-                      this phone number. Please check the
-                      number and try again.
+                      {t(
+                        "home.myAppointments.noAppointmentsDescription"
+                      )}
                     </p>
 
                     <button
                       type="button"
-                      onClick={handleNewSearch}
+                      onClick={
+                        handleNewSearch
+                      }
                       className="myappt-empty-search-button"
                     >
-                      Search again
+                      {t(
+                        "home.myAppointments.searchAgain"
+                      )}
                     </button>
+
                   </div>
                 )}
 
               {/* Appointments */}
 
               {!loading &&
-                appointments.length > 0 && (
+                appointments.length >
+                  0 && (
                   <div className="space-y-4">
-                    {appointments.map((appt) => {
-                      const {
-                        dateLabel,
-                        timeLabel,
-                      } = formatDateTime(
-                        appt.scheduledAt
-                      );
 
-                      const statusKind =
-                        getStatusKind(appt.status);
+                    {appointments.map(
+                      (appt) => {
 
-                      const cancellable =
-                        isCancellable(appt.status);
+                        const {
+                          dateLabel,
+                          timeLabel,
+                        } =
+                          formatDateTime(
+                            appt.scheduledAt,
+                            lang
+                          );
 
-                      const isConfirming =
-                        confirmingId === appt.id;
+                        const statusKind =
+                          getStatusKind(
+                            appt.status
+                          );
 
-                      const isCancelling =
-                        cancellingId === appt.id;
+                        const cancellable =
+                          isCancellable(
+                            appt.status
+                          );
 
-                      return (
-                        <div
-                          key={appt.id}
-                          className="myappt-appointment-card"
-                        >
-                          {/* Appointment Info */}
+                        const isConfirming =
+                          confirmingId ===
+                          appt.id;
 
-                          <div className="p-5 md:p-6 flex items-start gap-4">
-                            {/* Doctor Icon */}
+                        const isCancelling =
+                          cancellingId ===
+                          appt.id;
 
-                            <div className="myappt-doctor-icon">
-                              <Stethoscope
-                                size={24}
-                              />
-                            </div>
+                        return (
+                          <div
+                            key={
+                              appt.id
+                            }
+                            className="myappt-appointment-card"
+                          >
 
-                            {/* Content */}
+                            {/* Appointment Info */}
 
-                            <div className="flex-grow min-w-0">
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="min-w-0">
-                                  <h3 className="text-[17px] font-semibold text-[#1d324e] truncate">
-                                    {appt.doctorName}
-                                  </h3>
+                            <div className="p-5 md:p-6 flex items-start gap-4">
 
-                                  <p className="text-[13px] text-[#74777e] mt-1">
-                                    {formatAppointmentType(
-                                      appt.appointmentType
-                                    )}
-                                  </p>
-                                </div>
+                              {/* Doctor Icon */}
 
-                                <span
-                                  className={`myappt-status-badge myappt-status-${statusKind}`}
-                                >
-                                  {
-                                    statusLabel[
-                                      statusKind
-                                    ]
-                                  }
-                                </span>
+                              <div className="myappt-doctor-icon">
+                                <Stethoscope
+                                  size={24}
+                                />
                               </div>
 
-                              {/* Date / Time */}
+                              {/* Content */}
 
-                              <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-[13px] text-[#44474d]">
-                                <span className="flex items-center gap-2">
-                                  <Calendar
-                                    size={16}
-                                    className="text-[#775a19]"
-                                  />
+                              <div className="flex-grow min-w-0">
 
-                                  {dateLabel}
-                                </span>
+                                <div className="flex items-start justify-between gap-3">
 
-                                <span className="flex items-center gap-2">
-                                  <Clock
-                                    size={16}
-                                    className="text-[#775a19]"
-                                  />
+                                  <div className="min-w-0">
 
-                                  {timeLabel}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
+                                    <h3 className="text-[17px] font-semibold text-[#1d324e] truncate">
+                                      {
+                                        appt.doctorName
+                                      }
+                                    </h3>
 
-                          {/* Cancel Area */}
+                                    <p className="text-[13px] text-[#74777e] mt-1">
+                                      {getAppointmentTypeLabel(
+                                        appt.appointmentType
+                                      )}
+                                    </p>
 
-                          {cancellable && (
-                            <div className="border-t border-[#e4e2e1] px-5 py-3">
-                              {!isConfirming ? (
-                                <div className="flex justify-end">
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      setConfirmingId(
-                                        appt.id
-                                      )
-                                    }
-                                    className="myappt-cancel-button"
+                                  </div>
+
+                                  <span
+                                    className={`myappt-status-badge myappt-status-${statusKind}`}
                                   >
-                                    <XCircle
-                                      size={16}
-                                    />
-
-                                    <span>
-                                      Cancel appointment
-                                    </span>
-                                  </button>
-                                </div>
-                              ) : (
-                                <div className="myappt-cancel-confirm flex items-center justify-between gap-3">
-                                  <span className="text-[13px] text-[#44474d]">
-                                    Cancel this
-                                    appointment?
+                                    {getStatusLabel(
+                                      appt.status
+                                    )}
                                   </span>
 
-                                  <div className="flex items-center gap-3">
+                                </div>
+
+                                {/* Date / Time */}
+
+                                <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-[13px] text-[#44474d]">
+
+                                  <span className="flex items-center gap-2">
+
+                                    <Calendar
+                                      size={16}
+                                      className="text-[#775a19]"
+                                    />
+
+                                    {dateLabel}
+
+                                  </span>
+
+                                  <span className="flex items-center gap-2">
+
+                                    <Clock
+                                      size={16}
+                                      className="text-[#775a19]"
+                                    />
+
+                                    {timeLabel}
+
+                                  </span>
+
+                                </div>
+
+                              </div>
+
+                            </div>
+
+                            {/* Cancel Area */}
+
+                            {cancellable && (
+                              <div className="border-t border-[#e4e2e1] px-5 py-3">
+
+                                {!isConfirming ? (
+                                  <div
+                                    className={`flex ${
+                                      isArabic
+                                        ? "justify-start"
+                                        : "justify-end"
+                                    }`}
+                                  >
+
                                     <button
                                       type="button"
                                       onClick={() =>
                                         setConfirmingId(
-                                          null
-                                        )
-                                      }
-                                      className="myappt-keep-button"
-                                    >
-                                      <X size={14} />
-
-                                      Keep it
-                                    </button>
-
-                                    <button
-                                      type="button"
-                                      disabled={
-                                        isCancelling
-                                      }
-                                      onClick={() =>
-                                        handleConfirmCancel(
                                           appt.id
                                         )
                                       }
-                                      className="myappt-confirm-cancel-button"
+                                      className="myappt-cancel-button"
                                     >
-                                      {isCancelling
-                                        ? "Cancelling..."
-                                        : "Yes, cancel"}
+                                      <XCircle
+                                        size={16}
+                                      />
+
+                                      <span>
+                                        {t(
+                                          "home.myAppointments.cancelAppointment"
+                                        )}
+                                      </span>
+
                                     </button>
+
                                   </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                                ) : (
+                                  <div
+                                    className={`myappt-cancel-confirm flex items-center justify-between gap-3 ${
+                                      isArabic
+                                        ? "flex-row-reverse"
+                                        : ""
+                                    }`}
+                                  >
+
+                                    <span className="text-[13px] text-[#44474d]">
+                                      {t(
+                                        "home.myAppointments.cancelQuestion"
+                                      )}
+                                    </span>
+
+                                    <div className="flex items-center gap-3">
+
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setConfirmingId(
+                                            null
+                                          )
+                                        }
+                                        className="myappt-keep-button"
+                                      >
+                                        <X
+                                          size={14}
+                                        />
+
+                                        {t(
+                                          "home.myAppointments.keepAppointment"
+                                        )}
+                                      </button>
+
+                                      <button
+                                        type="button"
+                                        disabled={
+                                          isCancelling
+                                        }
+                                        onClick={() =>
+                                          handleConfirmCancel(
+                                            appt.id
+                                          )
+                                        }
+                                        className="myappt-confirm-cancel-button"
+                                      >
+                                        {isCancelling
+                                          ? t(
+                                              "home.myAppointments.cancelling"
+                                            )
+                                          : t(
+                                              "home.myAppointments.confirmCancel"
+                                            )}
+                                      </button>
+
+                                    </div>
+
+                                  </div>
+                                )}
+
+                              </div>
+                            )}
+
+                          </div>
+                        );
+                      }
+                    )}
+
                   </div>
                 )}
+
             </div>
+
           </section>
         )}
+
       </main>
+
     </div>
   );
 }

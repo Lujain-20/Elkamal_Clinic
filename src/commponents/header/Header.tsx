@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useLanguage } from "../../i18n/LanguageContext";
 import "./Header.css";
 
 interface IconProps {
@@ -24,77 +25,68 @@ function Icon({ name, size, fill, className }: IconProps) {
 }
 
 /* =========================================================
-   CLINIC INFO — replace with the real details
+   CLINIC PHONE NUMBERS
+   These stay the same regardless of language.
 ========================================================= */
 
-const CLINIC_PHONE = "+20 100 000 0000";
-const EMERGENCY_PHONE = "+20 100 000 0001";
-const CLINIC_ADDRESS = "Qena , in font of Family Mall , Gnody street ";
-const WORKING_HOURS = "Sat – Thu: 10:00 AM – 10:00 PM";
+const CLINIC_PHONE = "+20 127 643 9959";
+const EMERGENCY_PHONE = "+20 127 643 9959";
 
 /* =========================================================
    NAV LINKS
-   hash items scroll to a section on the Home page; if the
-   visitor is on another page, they get navigated to "/" +
-   hash first, and Home.tsx handles the scroll on arrival.
 ========================================================= */
 
 type NavItem = {
-  label: string;
-  labelAr: string;
+  key: "home" | "services" | "doctors" | "gallery";
   path: string;
   hash?: string;
+  icon: string;
 };
 
 const NAV_LINKS: NavItem[] = [
-  { label: "Home", labelAr: "الرئيسية", path: "/" },
-  { label: "Services", labelAr: "الخدمات", path: "/", hash: "services" },
-  { label: "Doctors", labelAr: "أطباؤنا", path: "/", hash: "doctors" },
-  { label: "Gallery", labelAr: "المعرض", path: "/gallery" },
+  { key: "home", path: "/", icon: "home" },
+  {
+    key: "services",
+    path: "/",
+    hash: "services",
+    icon: "dentistry",
+  },
+  {
+    key: "doctors",
+    path: "/",
+    hash: "doctors",
+    icon: "stethoscope",
+  },
+  {
+    key: "gallery",
+    path: "/gallery",
+    icon: "photo_library",
+  },
 ];
 
-interface HeaderProps {
-  lang: string;
-  setLang: (lang: string) => void;
-}
-
-export default function Header({ lang, setLang }: HeaderProps) {
+export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [appointmentsOpen, setAppointmentsOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const { lang, setLang, t } = useLanguage();
 
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [appointmentsOpen, setAppointmentsOpen] =
+    useState(false);
 
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const mobileMenuRef = useRef<HTMLDivElement>(null);
-  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] =
+    useState(false);
 
-  /* =========================================
-     Smart sticky header: the main header (logo,
-     nav, Appointments button) stays pinned at the
-     top at all times. The top info bar (address,
-     hours, emergency number) collapses smoothly
-     once the page is scrolled a bit, so the header
-     stays compact without losing quick access to
-     booking or the emergency number.
-  ========================================= */
+  const closeTimer =
+    useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 40);
-    };
+  const dropdownRef =
+    useRef<HTMLDivElement>(null);
 
-    handleScroll();
+  const mobileMenuRef =
+    useRef<HTMLDivElement>(null);
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
+  const menuButtonRef =
+    useRef<HTMLButtonElement>(null);
 
   /* =========================================
      Close dropdowns when clicking outside
@@ -119,15 +111,21 @@ export default function Header({ lang, setLang }: HeaderProps) {
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener(
+      "mousedown",
+      handleClickOutside
+    );
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside
+      );
     };
   }, []);
 
   /* =========================================
-     Close mobile menu on viewport resize to desktop
+     Close mobile menu on viewport resize
   ========================================= */
 
   useEffect(() => {
@@ -138,17 +136,23 @@ export default function Header({ lang, setLang }: HeaderProps) {
     };
 
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+
+    return () =>
+      window.removeEventListener(
+        "resize",
+        handleResize
+      );
   }, []);
 
   /* =========================================
-     Desktop hover (Appointments dropdown)
+     Desktop hover - Appointments dropdown
   ========================================= */
 
   const handleMouseEnter = () => {
     if (closeTimer.current) {
       clearTimeout(closeTimer.current);
     }
+
     setAppointmentsOpen(true);
   };
 
@@ -167,18 +171,23 @@ export default function Header({ lang, setLang }: HeaderProps) {
     path: string
   ) => {
     e.preventDefault();
+
     setAppointmentsOpen(false);
     setMobileMenuOpen(false);
+
     navigate(path);
   };
 
-  // Handles both plain page links and section-anchor links
-  // (Services / Doctors), whether we're already on Home or not.
+  /* =========================================
+     Navigation with sections
+  ========================================= */
+
   const handleNavClick = (
     e: React.MouseEvent<HTMLAnchorElement>,
     item: NavItem
   ) => {
     e.preventDefault();
+
     setAppointmentsOpen(false);
     setMobileMenuOpen(false);
 
@@ -189,248 +198,544 @@ export default function Header({ lang, setLang }: HeaderProps) {
 
     if (location.pathname === "/") {
       const el = document.getElementById(item.hash);
-      el?.scrollIntoView({ behavior: "smooth", block: "start" });
+
+      el?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
     } else {
       navigate(`/#${item.hash}`);
     }
   };
 
-  const galleryLabel = lang === "ar" ? "المعرض" : "Gallery";
+  /* =========================================
+     Phone links
+  ========================================= */
 
-  const emergencyHref = `tel:${EMERGENCY_PHONE.replace(/\s/g, "")}`;
-  const phoneHref = `tel:${CLINIC_PHONE.replace(/\s/g, "")}`;
+  const emergencyHref = `tel:${EMERGENCY_PHONE.replace(
+    /\s/g,
+    ""
+  )}`;
+
+  const phoneHref = `tel:${CLINIC_PHONE.replace(
+    /\s/g,
+    ""
+  )}`;
 
   return (
-    <header
-      className={`ek-header ${isScrolled ? "ek-header-scrolled" : ""}`}
-    >
-      {/* ================================
-          TOP INFO BAR (desktop / tablet)
-          Collapses once the page is scrolled — see
-          .ek-header-scrolled .ek-topbar in Header.css
-      ================================= */}
+    <header className="ek-header">
+
+      {/* =====================================================
+          TOP INFO BAR
+      ===================================================== */}
 
       <div className="ek-topbar">
         <div className="ek-container ek-topbar-inner">
+
+          {/* LEFT */}
+
           <div className="ek-topbar-left">
+
             <span className="ek-topbar-item">
-              <Icon name="location_on" size={16} />
-              <span>{CLINIC_ADDRESS}</span>
+              <Icon
+                name="location_on"
+                size={16}
+              />
+
+              <span>
+                {t("header.clinicAddress")}
+              </span>
             </span>
 
             <span className="ek-topbar-item">
-              <Icon name="schedule" size={16} />
-              <span>{WORKING_HOURS}</span>
+              <Icon
+                name="schedule"
+                size={16}
+              />
+
+              <span>
+                {t("header.workingHours")}
+              </span>
             </span>
+
           </div>
 
+          {/* RIGHT */}
+
           <div className="ek-topbar-right">
-            <a className="ek-topbar-phone" href={phoneHref}>
-              <Icon name="call" size={16} />
-              <span>{CLINIC_PHONE}</span>
+
+            {/* CLINIC PHONE */}
+
+            <a
+              className="ek-topbar-phone"
+              href={phoneHref}
+            >
+              <Icon
+                name="call"
+                size={16}
+              />
+
+              {/* dir=ltr keeps the number fixed */}
+              <span dir="ltr">
+                {CLINIC_PHONE}
+              </span>
             </a>
 
-            <a className="ek-topbar-emergency" href={emergencyHref}>
+            {/* EMERGENCY */}
+
+            <a
+              className="ek-topbar-emergency"
+              href={emergencyHref}
+            >
               <span className="ek-topbar-emergency-dot" />
-              <Icon name="emergency" size={16} />
-              <span>Emergency: {EMERGENCY_PHONE}</span>
+
+              <Icon
+                name="emergency"
+                size={16}
+              />
+
+              <span>
+                {t("header.emergencyLabel")}:{" "}
+
+                {/* Only the number is LTR */}
+                <span dir="ltr">
+                  {EMERGENCY_PHONE}
+                </span>
+              </span>
             </a>
+
+            {/* LANGUAGE */}
+
+            <div className="ek-topbar-lang">
+
+              <button
+                type="button"
+                className={
+                  lang === "en"
+                    ? "active"
+                    : ""
+                }
+                onClick={() =>
+                  setLang("en")
+                }
+              >
+                En
+              </button>
+
+              <button
+                type="button"
+                className={
+                  lang === "ar"
+                    ? "active"
+                    : ""
+                }
+                onClick={() =>
+                  setLang("ar")
+                }
+              >
+                عربي
+              </button>
+
+            </div>
+
           </div>
         </div>
       </div>
 
-      {/* ================================
+      {/* =====================================================
           MAIN HEADER
-      ================================= */}
+      ===================================================== */}
 
-      <div className="ek-container ek-header-inner">
-        {/* LEFT */}
+      <div className="ek-header-main">
 
-        <div className="ek-header-left">
-          <button
-            ref={menuButtonRef}
-            type="button"
-            className="ek-menu-btn lg-hidden"
-            aria-label="Menu"
-            aria-haspopup="true"
-            aria-expanded={mobileMenuOpen}
-            onClick={() => setMobileMenuOpen((open) => !open)}
-          >
-            <Icon name={mobileMenuOpen ? "close" : "menu"} />
-          </button>
+        <div className="ek-container ek-header-inner">
 
-          <a href="/" className="ek-logo" onClick={(e) => goTo(e, "/")}>
-            <img
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNcwU5RiVn0HTHmU2U1u3d1VTlRtOOXXjHxSBMjrL0LqFHxJ6fxbE7YlE4iBx9Nbz4gkweZ-5MZrjbDXzRMUYeEyuwLuA122Bm0uUpQy9DC5EaPq6WlYh2LP89NktybWVhANLT_xLkz40vzNxyAMJMCNVLplDyGtwlojYXTrLx2hEEuf0omuuKLQucZCYxgrS_u1RGTJ7Bm9x1MU4U0ZeoON9j-sitQxtawGIfOfPufWOsHVzPgePGCIulnAKsdx5UxYQ"
-              alt="ELKAMAL Dental Clinic Logo"
-            />
-            <span className="ek-logo-text md-block">ELKAMAL</span>
-          </a>
-        </div>
+          {/* LEFT */}
 
-        {/* RIGHT (Desktop) */}
+          <div className="ek-header-left">
 
-        <div className="ek-header-right">
-          <nav className="ek-nav lg-flex">
-            {NAV_LINKS.map((item) => (
-              <a
-                key={item.label}
-                href={item.hash ? `/#${item.hash}` : item.path}
-                onClick={(e) => handleNavClick(e, item)}
-              >
-                {item.label === "Gallery" ? galleryLabel : item.label}
-              </a>
-            ))}
-          </nav>
+            {/* MOBILE MENU BUTTON */}
 
-          {/* Language toggle — hidden on mobile, shown inside mobile menu instead */}
-          <div className="ek-lang-toggle sm-flex">
             <button
+              ref={menuButtonRef}
               type="button"
-              className={lang === "en" ? "active" : ""}
-              onClick={() => setLang("en")}
-            >
-              En
-            </button>
-            <button
-              type="button"
-              className={lang === "ar" ? "active" : ""}
-              onClick={() => setLang("ar")}
-            >
-              عربي
-            </button>
-          </div>
-
-          {/* Appointments dropdown */}
-          <div
-            className="ek-appointments-dropdown"
-            ref={dropdownRef}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-          >
-            <button
-              type="button"
-              className="btn btn-primary ek-appointments-button"
+              className="ek-menu-btn lg-hidden"
+              aria-label="Menu"
               aria-haspopup="true"
-              aria-expanded={appointmentsOpen}
-              onClick={() => setAppointmentsOpen((open) => !open)}
+              aria-expanded={mobileMenuOpen}
+              onClick={() =>
+                setMobileMenuOpen(
+                  (open) => !open
+                )
+              }
             >
-              <span>Appointments</span>
               <Icon
-                name="expand_more"
-                size={18}
-                className={appointmentsOpen ? "ek-chevron-open" : ""}
+                name={
+                  mobileMenuOpen
+                    ? "close"
+                    : "menu"
+                }
               />
             </button>
 
-            {appointmentsOpen && (
-              <div className="ek-appointments-menu">
-                <a href="/booking" onClick={(e) => goTo(e, "/booking")}>
-                  <Icon name="calendar_month" size={18} />
-                  <span>Book Appointment</span>
-                </a>
-
-                <a
-                  href="/my-appointments"
-                  onClick={(e) => goTo(e, "/my-appointments")}
-                >
-                  <Icon name="event_available" size={18} />
-                  <span>My Appointments</span>
-                </a>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* ================================
-          MOBILE MENU (below 1024px)
-      ================================= */}
-
-      {mobileMenuOpen && (
-        <div className="ek-mobile-menu" ref={mobileMenuRef}>
-          <nav className="ek-mobile-nav">
-            {NAV_LINKS.map((item) => (
-              <a
-                key={item.label}
-                href={item.hash ? `/#${item.hash}` : item.path}
-                onClick={(e) => handleNavClick(e, item)}
-              >
-                <Icon
-                  name={
-                    item.label === "Home"
-                      ? "home"
-                      : item.label === "Services"
-                      ? "dentistry"
-                      : item.label === "Doctors"
-                      ? "stethoscope"
-                      : "photo_library"
-                  }
-                  size={18}
-                />
-                <span>
-                  {item.label === "Gallery" ? galleryLabel : item.label}
-                </span>
-              </a>
-            ))}
-
-            <a href="/booking" onClick={(e) => goTo(e, "/booking")}>
-              <Icon name="calendar_month" size={18} />
-              <span>Book Appointment</span>
-            </a>
+            {/* LOGO */}
 
             <a
-              href="/my-appointments"
-              onClick={(e) => goTo(e, "/my-appointments")}
+              href="/"
+              className="ek-logo"
+              onClick={(e) =>
+                goTo(e, "/")
+              }
             >
-              <Icon name="event_available" size={18} />
-              <span>My Appointments</span>
+              <img
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNcwU5RiVn0HTHmU2U1u3d1VTlRtOOXXjHxSBMjrL0LqFHxJ6fxbE7YlE4iBx9Nbz4gkweZ-5MZrjbDXzRMUYeEyuwLuA122Bm0uUpQy9DC5EaPq6WlYh2LP89NktybWVhANLT_xLkz40vzNxyAMJMCNVLplDyGtwlojYXTrLx2hEEuf0omuuKLQucZCYxgrS_u1RGTJ7Bm9x1MU4U0ZeoON9j-sitQxtawGIfOfPufWOsHVzPgePGCIulnAKsdx5UxYQ"
+                alt="ELKAMAL Dental Clinic Logo"
+              />
+
+              <span className="ek-logo-text md-block">
+                {t("header.logoText")}
+              </span>
             </a>
-          </nav>
 
-          {/* Clinic info — normally shown in the top bar, which
-              is hidden on mobile, so it lives here instead. */}
-          <div className="ek-mobile-info">
-            <span className="ek-mobile-info-item">
-              <Icon name="location_on" size={16} />
-              <span>{CLINIC_ADDRESS}</span>
-            </span>
-
-            <span className="ek-mobile-info-item">
-              <Icon name="schedule" size={16} />
-              <span>{WORKING_HOURS}</span>
-            </span>
           </div>
 
-          <div className="ek-mobile-lang">
-            <button
-              type="button"
-              className={lang === "en" ? "active" : ""}
-              onClick={() => setLang("en")}
+          {/* RIGHT DESKTOP */}
+
+          <div className="ek-header-right">
+
+            {/* NAVIGATION */}
+
+            <nav className="ek-nav lg-flex">
+
+              {NAV_LINKS.map(
+                (item) => (
+                  <a
+                    key={item.key}
+                    href={
+                      item.hash
+                        ? `/#${item.hash}`
+                        : item.path
+                    }
+                    onClick={(e) =>
+                      handleNavClick(
+                        e,
+                        item
+                      )
+                    }
+                  >
+                    {t(
+                      `header.nav.${item.key}`
+                    )}
+                  </a>
+                )
+              )}
+
+            </nav>
+
+            {/* APPOINTMENTS */}
+
+            <div
+              className="ek-appointments-dropdown"
+              ref={dropdownRef}
+              onMouseEnter={
+                handleMouseEnter
+              }
+              onMouseLeave={
+                handleMouseLeave
+              }
             >
-              En
-            </button>
-            <button
-              type="button"
-              className={lang === "ar" ? "active" : ""}
-              onClick={() => setLang("ar")}
-            >
-              عربي
-            </button>
+
+              <button
+                type="button"
+                className="btn btn-primary ek-appointments-button"
+                aria-haspopup="true"
+                aria-expanded={
+                  appointmentsOpen
+                }
+                onClick={() =>
+                  setAppointmentsOpen(
+                    (open) => !open
+                  )
+                }
+              >
+
+                <span>
+                  {t(
+                    "header.appointments"
+                  )}
+                </span>
+
+                <Icon
+                  name="expand_more"
+                  size={18}
+                  className={
+                    appointmentsOpen
+                      ? "ek-chevron-open"
+                      : ""
+                  }
+                />
+
+              </button>
+
+              {appointmentsOpen && (
+                <div className="ek-appointments-menu">
+
+                  <a
+                    href="/booking"
+                    onClick={(e) =>
+                      goTo(
+                        e,
+                        "/booking"
+                      )
+                    }
+                  >
+                    <Icon
+                      name="calendar_month"
+                      size={18}
+                    />
+
+                    <span>
+                      {t(
+                        "header.bookAppointment"
+                      )}
+                    </span>
+                  </a>
+
+                  <a
+                    href="/my-appointments"
+                    onClick={(e) =>
+                      goTo(
+                        e,
+                        "/my-appointments"
+                      )
+                    }
+                  >
+                    <Icon
+                      name="event_available"
+                      size={18}
+                    />
+
+                    <span>
+                      {t(
+                        "header.myAppointments"
+                      )}
+                    </span>
+                  </a>
+
+                </div>
+              )}
+
+            </div>
+
           </div>
-
-          <a className="ek-mobile-phone" href={phoneHref}>
-            <Icon name="call" size={18} />
-            <span>{CLINIC_PHONE}</span>
-          </a>
-
-          <a className="ek-mobile-emergency" href={emergencyHref}>
-            <span className="ek-topbar-emergency-dot" />
-            <Icon name="emergency" size={18} />
-            <span>Emergency: {EMERGENCY_PHONE}</span>
-          </a>
         </div>
-      )}
+
+        {/* =====================================================
+            MOBILE MENU
+        ===================================================== */}
+
+        {mobileMenuOpen && (
+          <div
+            className="ek-mobile-menu"
+            ref={mobileMenuRef}
+          >
+
+            {/* MOBILE NAV */}
+
+            <nav className="ek-mobile-nav">
+
+              {NAV_LINKS.map(
+                (item) => (
+                  <a
+                    key={item.key}
+                    href={
+                      item.hash
+                        ? `/#${item.hash}`
+                        : item.path
+                    }
+                    onClick={(e) =>
+                      handleNavClick(
+                        e,
+                        item
+                      )
+                    }
+                  >
+                    <Icon
+                      name={item.icon}
+                      size={18}
+                    />
+
+                    <span>
+                      {t(
+                        `header.nav.${item.key}`
+                      )}
+                    </span>
+                  </a>
+                )
+              )}
+
+              {/* BOOK APPOINTMENT */}
+
+              <a
+                href="/booking"
+                onClick={(e) =>
+                  goTo(
+                    e,
+                    "/booking"
+                  )
+                }
+              >
+                <Icon
+                  name="calendar_month"
+                  size={18}
+                />
+
+                <span>
+                  {t(
+                    "header.bookAppointment"
+                  )}
+                </span>
+              </a>
+
+              {/* MY APPOINTMENTS */}
+
+              <a
+                href="/my-appointments"
+                onClick={(e) =>
+                  goTo(
+                    e,
+                    "/my-appointments"
+                  )
+                }
+              >
+                <Icon
+                  name="event_available"
+                  size={18}
+                />
+
+                <span>
+                  {t(
+                    "header.myAppointments"
+                  )}
+                </span>
+              </a>
+
+            </nav>
+
+            {/* MOBILE CLINIC INFO */}
+
+            <div className="ek-mobile-info">
+
+              <span className="ek-mobile-info-item">
+
+                <Icon
+                  name="location_on"
+                  size={16}
+                />
+
+                <span>
+                  {t(
+                    "header.clinicAddress"
+                  )}
+                </span>
+
+              </span>
+
+              <span className="ek-mobile-info-item">
+
+                <Icon
+                  name="schedule"
+                  size={16}
+                />
+
+                <span>
+                  {t(
+                    "header.workingHours"
+                  )}
+                </span>
+
+              </span>
+
+            </div>
+
+            {/* MOBILE LANGUAGE */}
+
+            <div className="ek-mobile-lang">
+
+              <button
+                type="button"
+                className={
+                  lang === "en"
+                    ? "active"
+                    : ""
+                }
+                onClick={() =>
+                  setLang("en")
+                }
+              >
+                En
+              </button>
+
+              <button
+                type="button"
+                className={
+                  lang === "ar"
+                    ? "active"
+                    : ""
+                }
+                onClick={() =>
+                  setLang("ar")
+                }
+              >
+                عربي
+              </button>
+
+            </div>
+
+            {/* MOBILE PHONE */}
+
+            <a
+              className="ek-mobile-phone"
+              href={phoneHref}
+            >
+              <Icon
+                name="call"
+                size={18}
+              />
+
+              <span dir="ltr">
+                {CLINIC_PHONE}
+              </span>
+            </a>
+
+            {/* MOBILE EMERGENCY */}
+
+            <a
+              className="ek-mobile-emergency"
+              href={emergencyHref}
+            >
+              <span className="ek-topbar-emergency-dot" />
+
+              <Icon
+                name="emergency"
+                size={18}
+              />
+
+              <span>
+                {t(
+                  "header.emergencyLabel"
+                )}:{" "}
+
+                <span dir="ltr">
+                  {EMERGENCY_PHONE}
+                </span>
+              </span>
+            </a>
+
+          </div>
+        )}
+
+      </div>
     </header>
   );
 }
