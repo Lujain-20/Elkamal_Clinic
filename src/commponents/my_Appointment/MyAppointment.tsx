@@ -146,7 +146,7 @@ function MyAppointments() {
       getStatusKind(status);
 
     return t(
-      `home.myAppointments.status.${statusKind}`
+      `myAppointments.status.${statusKind}`
     );
   };
 
@@ -163,7 +163,7 @@ function MyAppointments() {
     if (!key) return type;
 
     return t(
-      `home.myAppointments.appointmentTypes.${key}`
+      `myAppointments.appointmentTypes.${key}`
     );
   };
 
@@ -178,7 +178,7 @@ function MyAppointments() {
     if (!trimmedPhone) {
       setSearchError(
         t(
-          "home.myAppointments.errors.enterPhone"
+          "myAppointments.errors.enterPhone"
         )
       );
       return;
@@ -217,7 +217,7 @@ function MyAppointments() {
 
       setSearchError(
         t(
-          "home.myAppointments.errors.searchFailed"
+          "myAppointments.errors.searchFailed"
         )
       );
 
@@ -307,7 +307,7 @@ function MyAppointments() {
         setCancelError(
           backendMessage ||
             t(
-              "home.myAppointments.errors.cancelFailed"
+              "myAppointments.errors.cancelFailed"
             )
         );
 
@@ -358,7 +358,7 @@ function MyAppointments() {
 
               <h2 className="text-[24px] font-semibold text-[#1d324e]">
                 {t(
-                  "home.myAppointments.title"
+                  "myAppointments.title"
                 )}
               </h2>
 
@@ -366,7 +366,7 @@ function MyAppointments() {
 
               <p className="text-[14px] text-[#74777e] mt-2 leading-6 max-w-[480px] mx-auto">
                 {t(
-                  "home.myAppointments.description"
+                  "myAppointments.description"
                 )}
               </p>
 
@@ -385,7 +385,7 @@ function MyAppointments() {
                   className="block text-[13px] font-semibold text-[#1d324e] mb-2"
                 >
                   {t(
-                    "home.myAppointments.phoneNumber"
+                    "myAppointments.phoneNumber"
                   )}
                 </label>
 
@@ -404,7 +404,7 @@ function MyAppointments() {
                     handleKeyDown
                   }
                   placeholder={t(
-                    "home.myAppointments.phonePlaceholder"
+                    "myAppointments.phonePlaceholder"
                   )}
                   className="myappt-phone-input"
                 />
@@ -433,10 +433,10 @@ function MyAppointments() {
                 <span>
                   {loading
                     ? t(
-                        "home.myAppointments.searching"
+                        "myAppointments.searching"
                       )
                     : t(
-                        "home.myAppointments.viewAppointments"
+                        "myAppointments.viewAppointments"
                       )}
                 </span>
               </button>
@@ -445,7 +445,7 @@ function MyAppointments() {
 
               <p className="myappt-helper-text">
                 {t(
-                  "home.myAppointments.helper"
+                  "myAppointments.helper"
                 )}
               </p>
 
@@ -476,7 +476,7 @@ function MyAppointments() {
                 <div>
                   <p className="text-[12px] uppercase tracking-wider font-semibold text-[#74777e]">
                     {t(
-                      "home.myAppointments.showingResultsFor"
+                      "myAppointments.showingResultsFor"
                     )}
                   </p>
 
@@ -493,7 +493,7 @@ function MyAppointments() {
                   className="myappt-new-search-button"
                 >
                   {t(
-                    "home.myAppointments.searchAnother"
+                    "myAppointments.searchAnother"
                   )}
                 </button>
 
@@ -518,13 +518,13 @@ function MyAppointments() {
 
                   <p className="text-[15px] font-semibold text-[#1d324e]">
                     {t(
-                      "home.myAppointments.loading"
+                      "myAppointments.loading"
                     )}
                   </p>
 
                   <p className="text-[13px] text-[#74777e] mt-1">
                     {t(
-                      "home.myAppointments.pleaseWait"
+                      "myAppointments.pleaseWait"
                     )}
                   </p>
 
@@ -547,13 +547,13 @@ function MyAppointments() {
 
                     <p className="text-[16px] font-semibold text-[#1d324e]">
                       {t(
-                        "home.myAppointments.noAppointments"
+                        "myAppointments.noAppointments"
                       )}
                     </p>
 
                     <p className="text-[13px] text-[#74777e] mt-2 max-w-[400px] mx-auto leading-6">
                       {t(
-                        "home.myAppointments.noAppointmentsDescription"
+                        "myAppointments.noAppointmentsDescription"
                       )}
                     </p>
 
@@ -565,7 +565,7 @@ function MyAppointments() {
                       className="myappt-empty-search-button"
                     >
                       {t(
-                        "home.myAppointments.searchAgain"
+                        "myAppointments.searchAgain"
                       )}
                     </button>
 
@@ -722,7 +722,7 @@ function MyAppointments() {
 
                                       <span>
                                         {t(
-                                          "home.myAppointments.cancelAppointment"
+                                          "myAppointments.cancelAppointment"
                                         )}
                                       </span>
 
@@ -740,7 +740,7 @@ function MyAppointments() {
 
                                     <span className="text-[13px] text-[#44474d]">
                                       {t(
-                                        "home.myAppointments.cancelQuestion"
+                                        "myAppointments.cancelQuestion"
                                       )}
                                     </span>
 
@@ -760,7 +760,7 @@ function MyAppointments() {
                                         />
 
                                         {t(
-                                          "home.myAppointments.keepAppointment"
+                                          "myAppointments.keepAppointment"
                                         )}
                                       </button>
 
@@ -778,10 +778,10 @@ function MyAppointments() {
                                       >
                                         {isCancelling
                                           ? t(
-                                              "home.myAppointments.cancelling"
+                                              "myAppointments.cancelling"
                                             )
                                           : t(
-                                              "home.myAppointments.confirmCancel"
+                                              "myAppointments.confirmCancel"
                                             )}
                                       </button>
 
