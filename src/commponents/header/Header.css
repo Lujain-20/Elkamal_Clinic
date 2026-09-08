@@ -160,14 +160,14 @@
 }
 
 .ek-header-left { display: flex; align-items: center; gap: 16px; }
-.ek-menu-btn { display: flex; color: var(--primary, #1d324e); }
+
 .ek-logo { display: flex; align-items: center; gap: 8px; }
 .ek-logo img { height: 40px; width: auto; object-fit: contain; }
 .ek-logo-text {
-  display: none;
+  display: block;
   font-family: var(--font-display, "Manrope", sans-serif);
   font-weight: 700;
-  font-size: 24px;
+  font-size: 15px;
   color: var(--primary, #1d324e);
   letter-spacing: -0.01em;
 }
@@ -199,12 +199,19 @@
 .ek-header-right { display: flex; align-items: center; gap: 20px; }
 
 /* =========================================================
-   APPOINTMENTS DROPDOWN
+   APPOINTMENTS DROPDOWN (desktop only, 1024px+)
 ========================================================= */
 
 .ek-appointments-dropdown {
   position: relative;
   z-index: 1001;
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .ek-appointments-dropdown {
+    display: block;
+  }
 }
 
 .ek-appointments-button {
@@ -301,8 +308,24 @@
 }
 
 /* =========================================================
-   MOBILE MENU (hamburger panel)
+   MOBILE MENU (dropdown panel)
 ========================================================= */
+
+.ek-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  color: var(--primary, #1d324e);
+  transition: background-color 0.2s ease;
+}
+
+.ek-menu-btn:hover,
+.ek-menu-btn:active {
+  background-color: rgba(29, 50, 78, 0.06);
+}
 
 .ek-mobile-menu {
   position: absolute;
@@ -311,33 +334,35 @@
   right: 0;
   background: #ffffff;
   border-top: 1px solid #e8ecef;
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
-  padding: 16px 20px 20px;
+  box-shadow: 0 16px 40px rgba(29, 50, 78, 0.14);
+  padding: 20px 20px 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
   z-index: 999;
-  animation: appointmentDropdown 0.18s ease-out;
+  animation: appointmentDropdown 0.2s ease-out;
   max-height: calc(100vh - 100%);
   overflow-y: auto;
 }
 
+/* ---- Primary navigation ---- */
+
 .ek-mobile-nav {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .ek-mobile-nav a {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 10px;
+  gap: 14px;
+  padding: 13px 12px;
   color: #344054;
   text-decoration: none;
   font-size: 15px;
-  font-weight: 500;
-  border-radius: 9px;
+  font-weight: 600;
+  border-radius: 10px;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
@@ -345,12 +370,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
   background: #f1f8f7;
   color: #1d324e;
   flex-shrink: 0;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .ek-mobile-nav a:hover,
@@ -365,20 +391,113 @@
   color: #ffffff;
 }
 
+/* ---- Appointments accordion (CTA — visually distinct in gold) ---- */
+
+.ek-mobile-appointments {
+  margin-top: 6px;
+  border-top: 1px solid #f0f1f3;
+  padding-top: 6px;
+}
+
+.ek-mobile-appointments-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 12px;
+  border-radius: 10px;
+  color: var(--primary, #1d324e);
+  font-size: 15px;
+  font-weight: 700;
+  transition: background-color 0.2s ease;
+}
+
+.ek-mobile-appointments-btn:hover,
+.ek-mobile-appointments-btn[aria-expanded="true"] {
+  background-color: #fbf6ea;
+}
+
+.ek-mobile-appointments-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ek-mobile-appointments-title .icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: rgba(233, 193, 118, 0.18);
+  color: var(--secondary, #775a19);
+  flex-shrink: 0;
+}
+
+.ek-mobile-appointments-btn .icon-size-20 {
+  color: var(--secondary, #775a19);
+}
+
+.ek-mobile-appointments-submenu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+  margin: 4px 0 2px;
+  background: #faf9f7;
+  border-radius: 10px;
+  animation: appointmentDropdown 0.16s ease-out;
+}
+
+.ek-mobile-appointments-submenu a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  color: #344054;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.ek-mobile-appointments-submenu a .icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #775a19;
+  flex-shrink: 0;
+}
+
+.ek-mobile-appointments-submenu a:hover,
+.ek-mobile-appointments-submenu a:active {
+  background-color: #ffffff;
+  color: #775a19;
+}
+
+/* ---- Clinic info ---- */
+
 .ek-mobile-info {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  border-top: 1px solid #eee;
-  padding-top: 14px;
+  gap: 10px;
+  border-top: 1px solid #f0f1f3;
+  padding-top: 16px;
 }
 
 .ek-mobile-info-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   font-size: 13px;
-  color: #44474d;
+  color: #667085;
 }
 
 .ek-mobile-info-item .icon {
@@ -386,19 +505,25 @@
   flex-shrink: 0;
 }
 
+/* ---- Language: segmented control ---- */
+
 .ek-mobile-lang {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  background-color: #f1f2f4;
+  border-radius: 999px;
+  padding: 4px;
+  gap: 2px;
 }
 
 .ek-mobile-lang button {
   flex: 1;
-  padding: 10px;
-  border-radius: 10px;
-  background: #f5f5f5;
+  padding: 9px;
+  border-radius: 999px;
+  background: transparent;
   font-weight: 600;
-  font-size: 14px;
-  color: #44474d;
+  font-size: 13.5px;
+  color: #667085;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
@@ -407,34 +532,40 @@
   color: #ffffff;
 }
 
+/* ---- Phone ---- */
+
 .ek-mobile-phone {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 10px 0;
-  border-top: 1px solid #eee;
-  padding-top: 16px;
+  padding: 13px 12px;
+  border-radius: 10px;
+  background: #f7f8f9;
   font-weight: 600;
   font-size: 14px;
   color: var(--primary, #1d324e);
   text-decoration: none;
 }
 
+/* ---- Emergency: sticky footer bar, edge-to-edge ---- */
+
 .ek-mobile-emergency {
+  position: sticky;
+  bottom: 0;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background-color: rgba(233, 193, 118, 0.15);
+  padding: 15px 20px;
+  margin: 4px -20px 0;
+  background-color: var(--primary, #1d324e);
   font-weight: 700;
   font-size: 14px;
-  color: #785a1a;
+  color: var(--secondary-fixed-dim, #e9c176);
   text-decoration: none;
 }
 
 .ek-mobile-emergency .icon {
-  color: #785a1a;
+  color: var(--secondary-fixed-dim, #e9c176);
 }
 
 /* Mobile menu panel only relevant below desktop breakpoint */

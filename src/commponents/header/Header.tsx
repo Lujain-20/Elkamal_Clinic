@@ -26,7 +26,6 @@ function Icon({ name, size, fill, className }: IconProps) {
 
 /* =========================================================
    CLINIC PHONE NUMBERS
-   These stay the same regardless of language.
 ========================================================= */
 
 const CLINIC_PHONE = "+20 127 643 9959";
@@ -44,7 +43,11 @@ type NavItem = {
 };
 
 const NAV_LINKS: NavItem[] = [
-  { key: "home", path: "/", icon: "home" },
+  {
+    key: "home",
+    path: "/",
+    icon: "home",
+  },
   {
     key: "services",
     path: "/",
@@ -70,10 +73,21 @@ export default function Header() {
 
   const { lang, setLang, t } = useLanguage();
 
+  /* =========================================================
+     DESKTOP APPOINTMENTS DROPDOWN
+  ========================================================= */
+
   const [appointmentsOpen, setAppointmentsOpen] =
     useState(false);
 
+  /* =========================================================
+     MOBILE MENU
+  ========================================================= */
+
   const [mobileMenuOpen, setMobileMenuOpen] =
+    useState(false);
+
+  const [mobileAppointmentsOpen, setMobileAppointmentsOpen] =
     useState(false);
 
   const closeTimer =
@@ -88,9 +102,9 @@ export default function Header() {
   const menuButtonRef =
     useRef<HTMLButtonElement>(null);
 
-  /* =========================================
+  /* =========================================================
      Close dropdowns when clicking outside
-  ========================================= */
+  ========================================================= */
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -108,6 +122,7 @@ export default function Header() {
         !menuButtonRef.current.contains(e.target as Node)
       ) {
         setMobileMenuOpen(false);
+        setMobileAppointmentsOpen(false);
       }
     };
 
@@ -124,14 +139,15 @@ export default function Header() {
     };
   }, []);
 
-  /* =========================================
+  /* =========================================================
      Close mobile menu on viewport resize
-  ========================================= */
+  ========================================================= */
 
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
         setMobileMenuOpen(false);
+        setMobileAppointmentsOpen(false);
       }
     };
 
@@ -144,9 +160,9 @@ export default function Header() {
       );
   }, []);
 
-  /* =========================================
+  /* =========================================================
      Desktop hover - Appointments dropdown
-  ========================================= */
+  ========================================================= */
 
   const handleMouseEnter = () => {
     if (closeTimer.current) {
@@ -162,9 +178,9 @@ export default function Header() {
     }, 150);
   };
 
-  /* =========================================
+  /* =========================================================
      Navigation helpers
-  ========================================= */
+  ========================================================= */
 
   const goTo = (
     e: React.MouseEvent<HTMLAnchorElement>,
@@ -174,13 +190,14 @@ export default function Header() {
 
     setAppointmentsOpen(false);
     setMobileMenuOpen(false);
+    setMobileAppointmentsOpen(false);
 
     navigate(path);
   };
 
-  /* =========================================
+  /* =========================================================
      Navigation with sections
-  ========================================= */
+  ========================================================= */
 
   const handleNavClick = (
     e: React.MouseEvent<HTMLAnchorElement>,
@@ -190,6 +207,7 @@ export default function Header() {
 
     setAppointmentsOpen(false);
     setMobileMenuOpen(false);
+    setMobileAppointmentsOpen(false);
 
     if (!item.hash) {
       navigate(item.path);
@@ -208,9 +226,9 @@ export default function Header() {
     }
   };
 
-  /* =========================================
+  /* =========================================================
      Phone links
-  ========================================= */
+  ========================================================= */
 
   const emergencyHref = `tel:${EMERGENCY_PHONE.replace(
     /\s/g,
@@ -275,7 +293,6 @@ export default function Header() {
                 size={16}
               />
 
-              {/* dir=ltr keeps the number fixed */}
               <span dir="ltr">
                 {CLINIC_PHONE}
               </span>
@@ -297,7 +314,6 @@ export default function Header() {
               <span>
                 {t("header.emergencyLabel")}:{" "}
 
-                {/* Only the number is LTR */}
                 <span dir="ltr">
                   {EMERGENCY_PHONE}
                 </span>
@@ -363,11 +379,13 @@ export default function Header() {
               aria-label="Menu"
               aria-haspopup="true"
               aria-expanded={mobileMenuOpen}
-              onClick={() =>
+              onClick={() => {
                 setMobileMenuOpen(
                   (open) => !open
-                )
-              }
+                );
+
+                setMobileAppointmentsOpen(false);
+              }}
             >
               <Icon
                 name={
@@ -392,7 +410,7 @@ export default function Header() {
                 alt="ELKAMAL Dental Clinic Logo"
               />
 
-              <span className="ek-logo-text md-block">
+              <span className="ek-logo-text">
                 {t("header.logoText")}
               </span>
             </a>
@@ -574,51 +592,103 @@ export default function Header() {
                 )
               )}
 
-              {/* BOOK APPOINTMENT */}
+              {/* =================================================
+                  MOBILE APPOINTMENTS
+              ================================================= */}
 
-              <a
-                href="/booking"
-                onClick={(e) =>
-                  goTo(
-                    e,
-                    "/booking"
-                  )
-                }
-              >
-                <Icon
-                  name="calendar_month"
-                  size={18}
-                />
+              <div className="ek-mobile-appointments">
 
-                <span>
-                  {t(
-                    "header.bookAppointment"
-                  )}
-                </span>
-              </a>
+                <button
+                  type="button"
+                  className="ek-mobile-appointments-btn"
+                  aria-expanded={
+                    mobileAppointmentsOpen
+                  }
+                  onClick={() =>
+                    setMobileAppointmentsOpen(
+                      (open) => !open
+                    )
+                  }
+                >
+                  <span className="ek-mobile-appointments-title">
 
-              {/* MY APPOINTMENTS */}
+                    <Icon
+                      name="calendar_month"
+                      size={18}
+                    />
 
-              <a
-                href="/my-appointments"
-                onClick={(e) =>
-                  goTo(
-                    e,
-                    "/my-appointments"
-                  )
-                }
-              >
-                <Icon
-                  name="event_available"
-                  size={18}
-                />
+                    <span>
+                      {t(
+                        "header.appointments"
+                      )}
+                    </span>
 
-                <span>
-                  {t(
-                    "header.myAppointments"
-                  )}
-                </span>
-              </a>
+                  </span>
+
+                  <Icon
+                    name="expand_more"
+                    size={20}
+                    className={
+                      mobileAppointmentsOpen
+                        ? "ek-chevron-open"
+                        : ""
+                    }
+                  />
+                </button>
+
+                {mobileAppointmentsOpen && (
+                  <div className="ek-mobile-appointments-submenu">
+
+                    {/* BOOK APPOINTMENT */}
+
+                    <a
+                      href="/booking"
+                      onClick={(e) =>
+                        goTo(
+                          e,
+                          "/booking"
+                        )
+                      }
+                    >
+                      <Icon
+                        name="calendar_month"
+                        size={18}
+                      />
+
+                      <span>
+                        {t(
+                          "header.bookAppointment"
+                        )}
+                      </span>
+                    </a>
+
+                    {/* MY APPOINTMENTS */}
+
+                    <a
+                      href="/my-appointments"
+                      onClick={(e) =>
+                        goTo(
+                          e,
+                          "/my-appointments"
+                        )
+                      }
+                    >
+                      <Icon
+                        name="event_available"
+                        size={18}
+                      />
+
+                      <span>
+                        {t(
+                          "header.myAppointments"
+                        )}
+                      </span>
+                    </a>
+
+                  </div>
+                )}
+
+              </div>
 
             </nav>
 

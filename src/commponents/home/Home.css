@@ -144,7 +144,7 @@ img {
   .ek-logo { display: flex; align-items: center; gap: 8px; }
   .ek-logo img { height: 40px; width: auto; object-fit: contain; }
   .ek-logo-text {
-    display: none;
+    display: block;
     font-family: var(--font-display);
     font-weight: 700;
     font-size: 24px;
