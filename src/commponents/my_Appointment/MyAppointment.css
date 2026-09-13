@@ -388,35 +388,28 @@
 }
 
 .myappt-status-pending {
-  background-color:
-    rgba(254, 212, 136, 0.35);
-
-  color:
-    var(--on-secondary-container, #785a1a);
+  background-color: #fed488;
+  color: #5d4201;
+  border: 1px solid rgba(93, 66, 1, 0.15);
 }
 
 .myappt-status-confirmed {
-  background-color:
-    rgba(29, 50, 78, 0.1);
-
-  color:
-    var(--primary, #1d324e);
+  background-color: rgba(29, 50, 78, 0.14);
+  color: var(--primary, #1d324e);
+  border: 1px solid rgba(29, 50, 78, 0.2);
 }
 
 .myappt-status-completed {
-  background-color:
-    var(--surface-container-high, #eae8e7);
-
-  color:
-    var(--on-surface-variant, #44474d);
+  background-color: var(--surface-container-high, #eae8e7);
+  color: #2a2c2c;
+  border: 1px solid rgba(0,0,0,0.08);
 }
 
 .myappt-status-cancelled,
 .myappt-status-declined {
-  background-color:
-    rgba(154, 59, 59, 0.1);
-
-  color: #9a3b3b;
+  background-color: rgba(154, 59, 59, 0.16);
+  color: #7f2f2f;
+  border: 1px solid rgba(154, 59, 59, 0.25);
 }
 
 /* =========================================================

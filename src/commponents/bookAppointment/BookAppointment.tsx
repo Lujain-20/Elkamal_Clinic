@@ -20,7 +20,7 @@ import type {
   CreateAppointmentData,
   CreatedAppointment,
 } from "../services/appointmentService";
-
+import { AppointmentType } from "../../constant/appointment";
 import { useLanguage } from "../../i18n/LanguageContext";
 
 import "./BookAppointment.css";
@@ -45,18 +45,17 @@ const getAppointmentType = (
 ): CreateAppointmentData["appointmentType"] => {
   switch (serviceId) {
     case "orthodontics":
-      return "OrthodonticFollowUp";
+      return AppointmentType.OrthodonticFollowUp;
 
     case "cosmetic":
     case "restorative":
-      return "TreatmentSession";
+      return AppointmentType.TreatmentSession;
 
     case "general":
     default:
-      return "Checkup";
+      return AppointmentType.Checkup;
   }
 };
-
 /* =========================================================
    HELPERS
 ========================================================= */
@@ -1068,8 +1067,8 @@ function Booking() {
         ===================================================== */}
 
         {currentStep === 1 && (
-          <section className="px-5 py-4">
-
+  <section className="px-5 py-4 ek-step-fade">
+    
             <div className="mb-6">
 
               <h2 className="text-[24px] font-semibold text-[#1d324e]">
@@ -1373,14 +1372,11 @@ function Booking() {
                       }`}
                     >
 
-                      <div className="w-20 h-20 rounded-full overflow-hidden shrink-0 bg-[#e4e2e1] flex items-center justify-center">
-
-                        <Stethoscope
-                          size={30}
-                          className="text-[#1d324e]"
-                        />
-
-                      </div>
+                      <div className="w-20 h-20 rounded-full overflow-hidden shrink-0 bg-gradient-to-br from-[#1d324e] to-[#344966] flex items-center justify-center">
+  <span className="text-white text-[22px] font-semibold" style={{ fontFamily: "'Manrope', sans-serif" }}>
+    {doctor.name?.split(" ").map(n => n[0]).slice(0, 2).join("")}
+  </span>
+</div>
 
                       <div className="flex-grow">
 

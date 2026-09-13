@@ -22,7 +22,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://elkamal.runasp.net",
+        target: "https://elkamal.runasp.net",
         changeOrigin: true,
         secure: false,
       },

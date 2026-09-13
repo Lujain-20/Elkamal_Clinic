@@ -15,7 +15,11 @@ import {
 } from "../services/appointmentService";
 
 import type { Appointment } from "../services/appointmentService";
-
+import {
+  isCancellableStatus,
+  getStatusTranslationKey,
+  getAppointmentTypeTranslationKey,
+} from "../../constant/appointment";
 import { useLanguage } from "../../i18n/LanguageContext";
 
 import "./MyAppointment.css";
@@ -50,54 +54,7 @@ const formatDateTime = (
   };
 };
 
-const getAppointmentTypeKey = (type: string) => {
-  switch (type) {
-    case "Checkup":
-      return "generalCheckup";
 
-    case "TreatmentSession":
-      return "treatmentSession";
-
-    case "OrthodonticFollowUp":
-      return "orthodonticFollowUp";
-
-    default:
-      return null;
-  }
-};
-
-const isCancellable = (status: string) => {
-  return status === "Pending" || status === "Confirmed";
-};
-
-type StatusKind =
-  | "pending"
-  | "confirmed"
-  | "completed"
-  | "cancelled"
-  | "declined";
-
-const getStatusKind = (status: string): StatusKind => {
-  switch (status) {
-    case "Pending":
-      return "pending";
-
-    case "Confirmed":
-      return "confirmed";
-
-    case "Completed":
-      return "completed";
-
-    case "Cancelled":
-      return "cancelled";
-
-    case "Declined":
-      return "declined";
-
-    default:
-      return "pending";
-  }
-};
 
 /* =========================================================
    COMPONENT
@@ -139,33 +96,15 @@ function MyAppointments() {
      STATUS LABEL
   ========================================================= */
 
-  const getStatusLabel = (
-    status: string
-  ) => {
-    const statusKind =
-      getStatusKind(status);
+ const getStatusLabel = (status: string) => {
+  return t(`myAppointments.status.${getStatusTranslationKey(status)}`);
+};
 
-    return t(
-      `myAppointments.status.${statusKind}`
-    );
-  };
-
-  /* =========================================================
-     APPOINTMENT TYPE LABEL
-  ========================================================= */
-
-  const getAppointmentTypeLabel = (
-    type: string
-  ) => {
-    const key =
-      getAppointmentTypeKey(type);
-
-    if (!key) return type;
-
-    return t(
-      `myAppointments.appointmentTypes.${key}`
-    );
-  };
+const getAppointmentTypeLabel = (type: string) => {
+  const key = getAppointmentTypeTranslationKey(type);
+  if (!key) return type;
+  return t(`myAppointments.appointmentTypes.${key}`);
+};
 
   /* =========================================================
      SEARCH
@@ -591,15 +530,9 @@ function MyAppointments() {
                             lang
                           );
 
-                        const statusKind =
-                          getStatusKind(
-                            appt.status
-                          );
+                        const statusKind = getStatusTranslationKey(appt.status);
 
-                        const cancellable =
-                          isCancellable(
-                            appt.status
-                          );
+                        const cancellable = isCancellableStatus(appt.status);
 
                         const isConfirming =
                           confirmingId ===

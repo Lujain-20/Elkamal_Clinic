@@ -1,8 +1,9 @@
-import  { useEffect,  useState } from "react";
-import { getDoctors, getDoctorPhotos } from "../services/doctorService";
-import type { Doctor, DoctorPhoto } from "../services/doctorService";
+import { useEffect, useMemo } from "react";
+// import { getDoctors, getDoctorPhotos } from "../services/doctorService";
+// import type { Doctor, DoctorPhoto } from "../services/doctorService";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useLanguage } from "../../i18n/LanguageContext";
+import { useClinicData } from "../../constant/ClinicDataContext";
 import "./Home.css";
 
 
@@ -56,33 +57,39 @@ function Icon({ name, size, fill, className }: IconProps) {
 export default function ElkamalDentalClinic() {
   const { t } = useLanguage();
 
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [loadingDoctors, setLoadingDoctors] = useState(true);
-  const [doctorsError, setDoctorsError] = useState(false);
+const { doctors, doctorsWithPhotos, loading, error } = useClinicData();
 
-  const [cases, setCases] = useState<HomeCase[]>([]);
-  const [loadingCases, setLoadingCases] = useState(true);
-  const [casesError, setCasesError] = useState(false);
+const loadingDoctors = loading;
+const doctorsError = error;
+
+const loadingCases = loading;
+const casesError = error;
+
+const cases: HomeCase[] = useMemo(() => {
+  const combined: HomeCase[] = doctorsWithPhotos.flatMap(
+    ({ doctor, photos }) =>
+      photos
+        .filter(
+          (photo) => photo.beforeImageUrl && photo.afterImageUrl
+        )
+        .map((photo) => ({
+          id: photo.id,
+          before: photo.beforeImageUrl,
+          after: photo.afterImageUrl,
+          eyebrow: formatSpecialty(doctor.specialty),
+          title: photo.description,
+          doctor: doctor.name,
+          doctorId: doctor.id,
+        }))
+  );
+
+  return combined.slice(0, MAX_HOME_CASES);
+}, [doctorsWithPhotos]);  
 
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    const link1 = document.createElement("link");
-    link1.rel = "stylesheet";
-    link1.href =
-      "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap";
-    const link2 = document.createElement("link");
-    link2.rel = "stylesheet";
-    link2.href =
-      "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap";
-    document.head.appendChild(link1);
-    document.head.appendChild(link2);
-    return () => {
-      document.head.removeChild(link1);
-      document.head.removeChild(link2);
-    };
-  }, []);
+  
 
   /* =========================================================
      SCROLL TO SECTION (Services / Doctors) when arriving with
@@ -107,80 +114,13 @@ export default function ElkamalDentalClinic() {
   }, [location]);
 
   // use effect Doctor
-  useEffect(() => {
-  const fetchDoctors = async () => {
-    try {
-      setLoadingDoctors(true);
-
-      const data = await getDoctors();
-
-      setDoctors(data);
-    } catch (error) {
-      console.error("Failed to fetch doctors:", error);
-      setDoctorsError(true);
-    } finally {
-      setLoadingDoctors(false);
-    }
-  };
-
-  fetchDoctors();
-}, []);
+ 
 
   /* =========================================================
      SMILE TRANSFORMATIONS PREVIEW (real before/after photos)
   ========================================================= */
 
-  useEffect(() => {
-    const fetchCases = async () => {
-      try {
-        setLoadingCases(true);
-        setCasesError(false);
-
-        const doctorList = await getDoctors();
-
-        const photosByDoctor = await Promise.all(
-          doctorList.map(async (doctor) => {
-            try {
-              const photos = await getDoctorPhotos(doctor.id);
-              return { doctor, photos };
-            } catch (error) {
-              console.error(
-                `Failed to load photos for doctor ${doctor.id}:`,
-                error
-              );
-              return { doctor, photos: [] as DoctorPhoto[] };
-            }
-          })
-        );
-
-        const combined: HomeCase[] = photosByDoctor.flatMap(
-          ({ doctor, photos }) =>
-            photos
-              .filter(
-                (photo) => photo.beforeImageUrl && photo.afterImageUrl
-              )
-              .map((photo) => ({
-                id: photo.id,
-                before: photo.beforeImageUrl,
-                after: photo.afterImageUrl,
-                eyebrow: formatSpecialty(doctor.specialty),
-                title: photo.description,
-                doctor: doctor.name,
-                doctorId: doctor.id,
-              }))
-        );
-
-        setCases(combined.slice(0, MAX_HOME_CASES));
-      } catch (error) {
-        console.error("Failed to load cases:", error);
-        setCasesError(true);
-      } finally {
-        setLoadingCases(false);
-      }
-    };
-
-    fetchCases();
-  }, []);
+ 
 
   return (
     <div className="ek-root">
@@ -362,7 +302,22 @@ export default function ElkamalDentalClinic() {
             </button>
           </div>
 
-          {loadingCases && <p>{t("home.cases.loading")}</p>}
+          {loadingCases && (
+  <div className="ek-cases-grid">
+    {[1, 2].map((i) => (
+      <div className="ek-case-card ek-skeleton-card" key={i}>
+        <div className="ek-case-images">
+          <div className="ek-skeleton-block" />
+          <div className="ek-skeleton-block" />
+        </div>
+        <div className="ek-case-body">
+          <div className="ek-skeleton-line ek-skeleton-line-sm" />
+          <div className="ek-skeleton-line ek-skeleton-line-lg" />
+        </div>
+      </div>
+    ))}
+  </div>
+)}
 
           {!loadingCases && casesError && <p>{t("home.cases.error")}</p>}
 
@@ -452,9 +407,9 @@ export default function ElkamalDentalClinic() {
               {d.name}
             </h3>
 
-            <p className="ek-doctor-role">
-              {d.specialty}
-            </p>
+            <span className="ek-doctor-badge">
+  {d.specialty}
+</span>
           </div>
 
           <div className="ek-doctor-avail">

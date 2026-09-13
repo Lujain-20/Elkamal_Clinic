@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import {  useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import { useClinicData } from "../../constant/ClinicDataContext";
 import "../home/Home.css";
 
-import { getDoctors, getDoctorPhotos } from "../services/doctorService";
-import type { Doctor, DoctorPhoto } from "../services/doctorService";
+// import { getDoctors, getDoctorPhotos } from "../services/doctorService";
+// import type { Doctor, DoctorPhoto } from "../services/doctorService";
 
 import { useLanguage } from "../../i18n/LanguageContext";
 
@@ -70,10 +71,7 @@ export default function SmileTransformations() {
 
   const [specialtyFilter, setSpecialtyFilter] = useState("all");
 
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [cases, setCases] = useState<GalleryCase[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState("");
+  
 
   /*
   =========================================================
@@ -85,112 +83,37 @@ export default function SmileTransformations() {
 
   const isArabic = lang === "ar";
 
+const { doctors, doctorsWithPhotos, loading, error } = useClinicData();
+
+const loadError = error ? t("gallery.error") : "";
+
+const cases: GalleryCase[] = useMemo(() => {
+  const combined: GalleryCase[] = doctorsWithPhotos.flatMap(
+    ({ doctor, photos }) =>
+      photos
+        .filter(
+          (photo) => photo.beforeImageUrl && photo.afterImageUrl
+        )
+        .map((photo) => ({
+          id: photo.id,
+          doctorId: doctor.id,
+          doctorName: doctor.name,
+          specialty: doctor.specialty,
+          description: photo.description,
+          beforeImage: photo.beforeImageUrl,
+          afterImage: photo.afterImageUrl,
+        }))
+  );
+
+  combined.sort((a, b) => a.doctorName.localeCompare(b.doctorName));
+
+  return combined;
+}, [doctorsWithPhotos]);
 
 
+  
 
-  /*
-  =========================================================
-  LOAD GOOGLE FONTS
-  =========================================================
-  */
-
-  useEffect(() => {
-    const link1 = document.createElement("link");
-
-    link1.rel = "stylesheet";
-    link1.href =
-      "https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap";
-
-    const link2 = document.createElement("link");
-
-    link2.rel = "stylesheet";
-    link2.href =
-      "https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap";
-
-    document.head.appendChild(link1);
-    document.head.appendChild(link2);
-
-    return () => {
-      document.head.removeChild(link1);
-      document.head.removeChild(link2);
-    };
-  }, []);
-
-  /*
-  =========================================================
-  LOAD DOCTORS + THEIR PHOTOS
-  =========================================================
-  */
-
-  useEffect(() => {
-    const loadGallery = async () => {
-      try {
-        setLoading(true);
-        setLoadError("");
-
-        const doctorList = await getDoctors();
-
-        setDoctors(doctorList);
-
-        const photosByDoctor = await Promise.all(
-          doctorList.map(async (doctor) => {
-            try {
-              const photos = await getDoctorPhotos(doctor.id);
-
-              return {
-                doctor,
-                photos,
-              };
-            } catch (error) {
-              console.error(
-                `Failed to load photos for doctor ${doctor.id}:`,
-                error
-              );
-
-              return {
-                doctor,
-                photos: [] as DoctorPhoto[],
-              };
-            }
-          })
-        );
-
-        const combined: GalleryCase[] = photosByDoctor.flatMap(
-          ({ doctor, photos }) =>
-            photos
-              .filter(
-                (photo) =>
-                  photo.beforeImageUrl &&
-                  photo.afterImageUrl
-              )
-              .map((photo) => ({
-                id: photo.id,
-                doctorId: doctor.id,
-                doctorName: doctor.name,
-                specialty: doctor.specialty,
-                description: photo.description,
-                beforeImage: photo.beforeImageUrl,
-                afterImage: photo.afterImageUrl,
-              }))
-        );
-
-        combined.sort((a, b) =>
-          a.doctorName.localeCompare(b.doctorName)
-        );
-
-        setCases(combined);
-      } catch (error) {
-        console.error("Failed to load gallery:", error);
-
-        setLoadError(t("home.cases.error"));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadGallery();
-  }, []);
-
+  
   /*
   =========================================================
   FILTER OPTIONS
@@ -297,8 +220,10 @@ export default function SmileTransformations() {
                 onChange={(e) =>
                   setDoctorFilter(e.target.value)
                 }
-                className="w-full cursor-pointer rounded-md border border-[#c4c6ce] bg-[#fbf9f8] px-4 py-2.5 text-[#1b1c1c] outline-none transition focus:border-[#1d324e] focus:ring-1 focus:ring-[#1d324e]"
-              >
+className="w-full cursor-pointer appearance-none rounded-md border border-[#c4c6ce] bg-[#fbf9f8] bg-no-repeat bg-[right_1rem_center] px-4 py-2.5 pr-10 text-[#1b1c1c] outline-none transition focus:border-[#1d324e] focus:ring-1 focus:ring-[#1d324e]"
+style={{
+  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2344474d' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
+}}              >
                 <option value="all">
                   {t("gallery.allDoctors")}
                 </option>
@@ -398,25 +323,25 @@ export default function SmileTransformations() {
 
                 {/* BEFORE / AFTER */}
 
-                <div className="relative flex h-64 w-full">
+                <div className="relative flex h-64 w-full divide-x-[3px] divide-white">
 
                   {/* BEFORE IMAGE */}
 
                   <div
-                    className="h-full w-1/2 border-r border-[#fbf9f8] bg-cover bg-center"
-                    style={{
-                      backgroundImage: `url(${item.beforeImage})`,
-                    }}
-                  />
+  className="h-full w-1/2 bg-cover bg-center"
+  style={{
+    backgroundImage: `url(${item.beforeImage})`,
+  }}
+/>
 
                   {/* AFTER IMAGE */}
 
-                  <div
-                    className="h-full w-1/2 border-l border-[#fbf9f8] bg-cover bg-center"
-                    style={{
-                      backgroundImage: `url(${item.afterImage})`,
-                    }}
-                  />
+                 <div
+  className="h-full w-1/2 bg-cover bg-center"
+  style={{
+    backgroundImage: `url(${item.afterImage})`,
+  }}
+/>
 
                   {/* CENTER ICON */}
 
@@ -509,12 +434,26 @@ export default function SmileTransformations() {
         =================================================== */}
 
         {!loading &&
-          !loadError &&
-          filteredCases.length === 0 && (
-            <p className="mt-8 text-center text-[#44474d]">
-              {t("gallery.noCases")}
-            </p>
-          )}
+  !loadError &&
+  filteredCases.length === 0 && (
+    <div className="mt-8 flex flex-col items-center justify-center rounded-xl border border-[#c4c6ce]/30 bg-white/60 py-16 px-6 text-center">
+      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#eef3f7]">
+        <span className="material-symbols-outlined text-3xl text-[#1d324e]">
+          search_off
+        </span>
+      </div>
+      <p className="text-[16px] font-semibold text-[#1d324e]">
+        {t("gallery.noCases")}
+      </p>
+      <button
+        type="button"
+        onClick={resetFilters}
+        className="mt-4 rounded-lg border border-[#1d324e] px-4 py-2 text-sm font-semibold text-[#1d324e] transition hover:bg-[#1d324e] hover:text-white"
+      >
+        {t("gallery.resetFilters")}
+      </button>
+    </div>
+  )}
 
       </main>
 

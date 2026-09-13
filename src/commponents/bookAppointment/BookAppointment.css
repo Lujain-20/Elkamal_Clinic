@@ -371,28 +371,29 @@
 /* Days that are in the past OR confirmed to have zero
    open slots: shown blurred, dimmed and unclickable. */
 .booking-day-unavailable {
-  color: #1d324e;
-  filter: blur(1.6px);
-  opacity: 0.4;
+  color: var(--outline);
+  background-color: var(--surface-container);
+  opacity: 0.7;
   cursor: not-allowed;
   pointer-events: none;
   user-select: none;
   position: relative;
+  border-radius: 9999px;
 }
 
-/* A thin diagonal strike-through hint so the "unavailable"
-   state also reads clearly for users with reduced blur
-   perception (accessibility / prefers-reduced-motion etc). */
 .booking-day-unavailable::after {
   content: "";
   position: absolute;
-  left: 18%;
-  right: 18%;
+  left: 22%;
+  right: 22%;
   top: 50%;
-  height: 1px;
-  background-color: rgba(29, 50, 78, 0.35);
-  transform: rotate(-18deg);
+  height: 1.5px;
+  background-color: var(--outline);
+  transform: rotate(-15deg);
 }
+
+
+
 
 /* Days whose availability hasn't been confirmed yet
    (still checking the month): disabled + gentle pulse,
