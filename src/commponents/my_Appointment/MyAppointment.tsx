@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Calendar,
   Clock,
@@ -54,7 +54,11 @@ const formatDateTime = (
   };
 };
 
+/* =========================================================
+   AUTO-REFRESH INTERVAL (بالميلي ثانية)
+========================================================= */
 
+const AUTO_REFRESH_INTERVAL = 10000; // كل 10 ثواني
 
 /* =========================================================
    COMPONENT
@@ -91,6 +95,9 @@ function MyAppointments() {
 
   const [cancelError, setCancelError] =
     useState("");
+
+  // نحتفظ برقم الهاتف اللي عملنا بيه بحث فعلي، عشان الـ auto-refresh يستخدمه
+  const searchedPhoneRef = useRef("");
 
   /* =========================================================
      STATUS LABEL
@@ -148,6 +155,7 @@ const getAppointmentTypeLabel = (type: string) => {
       setAppointments(sorted);
 
       setHasSearched(true);
+      searchedPhoneRef.current = trimmedPhone;
     } catch (error) {
       console.error(
         "Failed to load appointments:",
@@ -167,6 +175,51 @@ const getAppointmentTypeLabel = (type: string) => {
       setLoading(false);
     }
   };
+
+  /* =========================================================
+     AUTO-REFRESH (تحديث صامت في الخلفية)
+     - بيشتغل بس لما المريض يكون واقف في شاشة النتائج (hasSearched)
+     - من غير ما يظهر شاشة "جاري التحميل" أو يعمل أي وميض
+     - بيوقف تلقائيًا لو المريض رجع لشاشة البحث أو قفل الصفحة
+  ========================================================= */
+
+  useEffect(() => {
+    if (!hasSearched || !searchedPhoneRef.current) return;
+
+    const silentRefresh = async () => {
+      try {
+        const data = await getAppointmentsByPhone(
+          searchedPhoneRef.current
+        );
+
+        const sorted = [...data].sort(
+          (a, b) =>
+            new Date(b.scheduledAt).getTime() -
+            new Date(a.scheduledAt).getTime()
+        );
+
+        setAppointments(sorted);
+      } catch {
+        // فشل التحديث الصامت مش لازم يظهر أي رسالة إيرور للمريض
+        // (البيانات القديمة هتفضل ظاهرة، وهيعيد المحاولة تاني بعد الفترة الجاية)
+      }
+    };
+
+    const intervalId = setInterval(silentRefresh, AUTO_REFRESH_INTERVAL);
+
+    // كمان بنحدّث فورًا لما المريض يرجع للتاب بعد ما كان في تاب تاني
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        silentRefresh();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [hasSearched]);
 
   /* =========================================================
      ENTER KEY
@@ -196,6 +249,8 @@ const getAppointmentTypeLabel = (type: string) => {
     setPhoneNumber("");
 
     setConfirmingId(null);
+
+    searchedPhoneRef.current = "";
   };
 
   /* =========================================================
@@ -269,22 +324,12 @@ const getAppointmentTypeLabel = (type: string) => {
           : "ltr"
       }
     >
-      {/* =====================================================
-          MAIN
-      ===================================================== */}
-
       <main className="flex-grow pb-16">
-
-        {/* ===================================================
-            SEARCH STATE
-        =================================================== */}
 
         {!hasSearched && (
           <section className="px-5 pt-10 pb-16">
 
             <div className="myappt-search-card max-w-[600px] mx-auto">
-
-              {/* Icon */}
 
               <div className="mx-auto w-16 h-16 rounded-full bg-[#eef3f7] flex items-center justify-center mb-6">
                 <Phone
@@ -293,23 +338,17 @@ const getAppointmentTypeLabel = (type: string) => {
                 />
               </div>
 
-              {/* Heading */}
-
               <h2 className="text-[24px] font-semibold text-[#1d324e]">
                 {t(
                   "myAppointments.title"
                 )}
               </h2>
 
-              {/* Description */}
-
               <p className="text-[14px] text-[#74777e] mt-2 leading-6 max-w-[480px] mx-auto">
                 {t(
                   "myAppointments.description"
                 )}
               </p>
-
-              {/* Form */}
 
               <div
                 className={`mt-8 ${
@@ -348,16 +387,12 @@ const getAppointmentTypeLabel = (type: string) => {
                   className="myappt-phone-input"
                 />
 
-                {/* Search Error */}
-
                 {searchError && (
                   <p className="text-[13px] text-[#9a3b3b] mt-2">
                     {searchError}
                   </p>
                 )}
               </div>
-
-              {/* Search Button */}
 
               <button
                 type="button"
@@ -380,8 +415,6 @@ const getAppointmentTypeLabel = (type: string) => {
                 </span>
               </button>
 
-              {/* Helper */}
-
               <p className="myappt-helper-text">
                 {t(
                   "myAppointments.helper"
@@ -393,16 +426,10 @@ const getAppointmentTypeLabel = (type: string) => {
           </section>
         )}
 
-        {/* ===================================================
-            RESULTS
-        =================================================== */}
-
         {hasSearched && (
           <section className="px-5 pt-8">
 
             <div className="max-w-[900px] mx-auto">
-
-              {/* Results Header */}
 
               <div
                 className={`myappt-results-header flex items-center justify-between mb-6 gap-4 ${
@@ -438,15 +465,11 @@ const getAppointmentTypeLabel = (type: string) => {
 
               </div>
 
-              {/* Cancel Error */}
-
               {cancelError && (
                 <div className="mb-5 bg-[#fbeaea] border border-[#e3b6b6] rounded-xl p-4 text-[13px] text-[#9a3b3b]">
                   {cancelError}
                 </div>
               )}
-
-              {/* Loading */}
 
               {loading && (
                 <div className="myappt-message-card">
@@ -469,8 +492,6 @@ const getAppointmentTypeLabel = (type: string) => {
 
                 </div>
               )}
-
-              {/* No appointments */}
 
               {!loading &&
                 appointments.length ===
@@ -511,8 +532,6 @@ const getAppointmentTypeLabel = (type: string) => {
                   </div>
                 )}
 
-              {/* Appointments */}
-
               {!loading &&
                 appointments.length >
                   0 && (
@@ -550,19 +569,13 @@ const getAppointmentTypeLabel = (type: string) => {
                             className="myappt-appointment-card"
                           >
 
-                            {/* Appointment Info */}
-
                             <div className="p-5 md:p-6 flex items-start gap-4">
-
-                              {/* Doctor Icon */}
 
                               <div className="myappt-doctor-icon">
                                 <Stethoscope
                                   size={24}
                                 />
                               </div>
-
-                              {/* Content */}
 
                               <div className="flex-grow min-w-0">
 
@@ -594,8 +607,6 @@ const getAppointmentTypeLabel = (type: string) => {
 
                                 </div>
 
-                                {/* Date / Time */}
-
                                 <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-[13px] text-[#44474d]">
 
                                   <span className="flex items-center gap-2">
@@ -625,8 +636,6 @@ const getAppointmentTypeLabel = (type: string) => {
                               </div>
 
                             </div>
-
-                            {/* Cancel Area */}
 
                             {cancellable && (
                               <div className="border-t border-[#e4e2e1] px-5 py-3">
