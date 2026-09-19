@@ -3,18 +3,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useLanguage } from "../../i18n/LanguageContext";
 import { doctorTranslations } from "../../i18n/doctorTranslations";
 import { useClinicData } from "../../constant/ClinicDataContext";
-import doctorAhmadImage from "../../assets/prof.ahmed.jpeg";
-import doctorMichaelImage from "../../assets/prof.micheal.jpeg";
 import heroImage from "../../assets/hero1.jpeg";
 import "./Home.css";
 import "../gallery/Gallery.css";
-
-// image prof of doctor
-
-const doctorImages: Record<string, string> = {
-  "366f7cbd-295d-41b8-9335-6fd9fcfb39da": doctorAhmadImage,
-  "5caec077-5107-44d6-bc4b-78f8336334b6": doctorMichaelImage,
-};
 
 // =========================================================
 // SERVICES META
@@ -75,6 +66,31 @@ function Icon({
     >
       {name}
     </span>
+  );
+}
+
+// =========================================================
+// DOCTOR AVATAR
+// Shows the real photo returned by the backend
+// (profileImageUrl, set via POST /api/doctors/upload-image
+// then POST /api/doctors). Falls back to a neutral person
+// icon if the doctor has no photo yet.
+// =========================================================
+
+interface DoctorAvatarProps {
+  src?: string;
+  alt: string;
+}
+
+function DoctorAvatar({ src, alt }: DoctorAvatarProps) {
+  if (src) {
+    return <img src={src} alt={alt} />;
+  }
+
+  return (
+    <div className="ek-doctor-photo-fallback">
+      <Icon name="person" size={40} />
+    </div>
   );
 }
 
@@ -173,26 +189,12 @@ function useAutoScrollCarousel(intervalMs: number) {
       isPausedRef.current = false;
     };
 
-    el.addEventListener(
-      "mouseenter",
-      handlePause
-    );
-
-    el.addEventListener(
-      "mouseleave",
-      handleResume
-    );
-
-    el.addEventListener(
-      "touchstart",
-      handlePause,
-      { passive: true }
-    );
-
-    el.addEventListener(
-      "touchend",
-      handleResume
-    );
+    el.addEventListener("mouseenter", handlePause);
+    el.addEventListener("mouseleave", handleResume);
+    el.addEventListener("touchstart", handlePause, {
+      passive: true,
+    });
+    el.addEventListener("touchend", handleResume);
 
     const getStepPx = () => {
       const firstCard =
@@ -206,16 +208,13 @@ function useAutoScrollCarousel(intervalMs: number) {
       const cardWidth =
         firstCard?.getBoundingClientRect().width ?? 0;
 
-      return cardWidth > 0
-        ? cardWidth + gap
-        : 220;
+      return cardWidth > 0 ? cardWidth + gap : 220;
     };
 
     const interval = setInterval(() => {
       if (isPausedRef.current) return;
 
-      const maxScroll =
-        el.scrollWidth - el.clientWidth;
+      const maxScroll = el.scrollWidth - el.clientWidth;
 
       if (maxScroll <= 0) return;
 
@@ -225,23 +224,17 @@ function useAutoScrollCarousel(intervalMs: number) {
         getComputedStyle(el).direction === "rtl";
 
       if (isRtl) {
-        const atEnd =
-          el.scrollLeft <= -maxScroll + 4;
+        const atEnd = el.scrollLeft <= -maxScroll + 4;
 
         el.scrollTo({
-          left: atEnd
-            ? 0
-            : el.scrollLeft - stepPx,
+          left: atEnd ? 0 : el.scrollLeft - stepPx,
           behavior: "smooth",
         });
       } else {
-        const atEnd =
-          el.scrollLeft >= maxScroll - 4;
+        const atEnd = el.scrollLeft >= maxScroll - 4;
 
         el.scrollTo({
-          left: atEnd
-            ? 0
-            : el.scrollLeft + stepPx,
+          left: atEnd ? 0 : el.scrollLeft + stepPx,
           behavior: "smooth",
         });
       }
@@ -250,25 +243,10 @@ function useAutoScrollCarousel(intervalMs: number) {
     return () => {
       clearInterval(interval);
 
-      el.removeEventListener(
-        "mouseenter",
-        handlePause
-      );
-
-      el.removeEventListener(
-        "mouseleave",
-        handleResume
-      );
-
-      el.removeEventListener(
-        "touchstart",
-        handlePause
-      );
-
-      el.removeEventListener(
-        "touchend",
-        handleResume
-      );
+      el.removeEventListener("mouseenter", handlePause);
+      el.removeEventListener("mouseleave", handleResume);
+      el.removeEventListener("touchstart", handlePause);
+      el.removeEventListener("touchend", handleResume);
     };
   }, [node, intervalMs]);
 
@@ -321,8 +299,7 @@ export default function ElkamalDentalClinic() {
   const [heroAppointmentType, setHeroAppointmentType] =
     useState("");
 
-  const [heroDoctorId, setHeroDoctorId] =
-    useState("");
+  const [heroDoctorId, setHeroDoctorId] = useState("");
 
   const [heroTab, setHeroTab] =
     useState<"book" | "contact">("book");
@@ -342,46 +319,34 @@ export default function ElkamalDentalClinic() {
   // =========================================================
 
   const cases: HomeCase[] = useMemo(() => {
-    const combined: HomeCase[] =
-      doctorsWithPhotos.flatMap(
-        ({ doctor, photos }) =>
-          photos
-            .filter(
-              (photo) =>
-                photo.beforeImageUrl &&
-                photo.afterImageUrl
-            )
-            .map((photo) => {
-              const translatedDoctor =
-                getDoctorTranslation(
-                  doctor.id,
-                  doctor.name,
-                  doctor.bio,
-                  doctor.specialty
-                );
+    const combined: HomeCase[] = doctorsWithPhotos.flatMap(
+      ({ doctor, photos }) =>
+        photos
+          .filter(
+            (photo) =>
+              photo.beforeImageUrl && photo.afterImageUrl
+          )
+          .map((photo) => {
+            const translatedDoctor = getDoctorTranslation(
+              doctor.id,
+              doctor.name,
+              doctor.bio,
+              doctor.specialty
+            );
 
-              return {
-                id: photo.id,
-
-                before: photo.beforeImageUrl,
-
-                after: photo.afterImageUrl,
-
-                eyebrow: translatedDoctor.specialty,
-
-                title: photo.description,
-
-                doctor: translatedDoctor.name,
-
-                doctorId: doctor.id,
-              };
-            })
-      );
-
-    return combined.slice(
-      0,
-      MAX_HOME_CASES
+            return {
+              id: photo.id,
+              before: photo.beforeImageUrl,
+              after: photo.afterImageUrl,
+              eyebrow: translatedDoctor.specialty,
+              title: photo.description,
+              doctor: translatedDoctor.name,
+              doctorId: doctor.id,
+            };
+          })
     );
+
+    return combined.slice(0, MAX_HOME_CASES);
   }, [doctorsWithPhotos, lang]);
 
   // =========================================================
@@ -395,10 +360,9 @@ export default function ElkamalDentalClinic() {
   // CASE CAROUSEL REF
   // =========================================================
 
-  const casesCarouselRef =
-    useAutoScrollCarousel(
-      CASE_CAROUSEL_INTERVAL_MS
-    );
+  const casesCarouselRef = useAutoScrollCarousel(
+    CASE_CAROUSEL_INTERVAL_MS
+  );
 
   // =========================================================
   // SCROLL TO SECTION
@@ -407,8 +371,7 @@ export default function ElkamalDentalClinic() {
   useEffect(() => {
     if (!location.hash) return;
 
-    const id =
-      location.hash.replace("#", "");
+    const id = location.hash.replace("#", "");
 
     const timer = setTimeout(() => {
       document
@@ -419,8 +382,7 @@ export default function ElkamalDentalClinic() {
         });
     }, 150);
 
-    return () =>
-      clearTimeout(timer);
+    return () => clearTimeout(timer);
   }, [location]);
 
   // =========================================================
@@ -430,15 +392,12 @@ export default function ElkamalDentalClinic() {
   return (
     <div className="ek-root">
       <main className="ek-main">
-
         {/* =================================================
             HERO
         ================================================= */}
 
         <section className="ek-hero">
-
           <div className="ek-hero-bg">
-
             <img
               src={heroImage}
               alt=""
@@ -446,44 +405,28 @@ export default function ElkamalDentalClinic() {
             />
 
             <div className="ek-hero-bg-gradient" />
-
           </div>
 
           <div className="ek-hero-inner">
-
             <div className="ek-hero-copy">
-
               <div className="ek-hero-badge">
+                <Icon name="verified" size={16} />
 
-                <Icon
-                  name="verified"
-                  size={16}
-                />
-
-                <span>
-                  {t("home.hero.badge")}
-                </span>
-
+                <span>{t("home.hero.badge")}</span>
               </div>
 
               <h1 className="ek-hero-title">
-
                 {t("home.hero.titleLine1")}
-
                 <br />
-
                 <span className="ek-hero-highlight">
                   {t("home.hero.titleLine2")}
                 </span>
-
               </h1>
 
               <p className="ek-hero-desc">
                 {t("home.hero.desc")}
               </p>
-
             </div>
-
           </div>
 
           {/* =================================================
@@ -491,55 +434,31 @@ export default function ElkamalDentalClinic() {
           ================================================= */}
 
           <div className="ek-hero-card">
-
             <div className="ek-hero-card-tabs">
-
               <button
                 type="button"
                 className={`ek-hero-card-tab ${
-                  heroTab === "book"
-                    ? "active"
-                    : ""
+                  heroTab === "book" ? "active" : ""
                 }`}
-                onClick={() =>
-                  setHeroTab("book")
-                }
+                onClick={() => setHeroTab("book")}
               >
-
-                <Icon
-                  name="calendar_month"
-                  size={18}
-                />
-
+                <Icon name="calendar_month" size={18} />
                 {t("home.hero.bookBtn")}
-
               </button>
 
               <button
                 type="button"
                 className={`ek-hero-card-tab ${
-                  heroTab === "contact"
-                    ? "active"
-                    : ""
+                  heroTab === "contact" ? "active" : ""
                 }`}
-                onClick={() =>
-                  setHeroTab("contact")
-                }
+                onClick={() => setHeroTab("contact")}
               >
-
-                <Icon
-                  name="call"
-                  size={18}
-                />
-
+                <Icon name="call" size={18} />
                 {t("home.footer.contactUs")}
-
               </button>
-
             </div>
 
             {heroTab === "book" ? (
-
               <form
                 className="ek-hero-card-form"
                 onSubmit={(e) => {
@@ -548,37 +467,27 @@ export default function ElkamalDentalClinic() {
                   navigate("/booking", {
                     state: {
                       selectedAppointmentType:
-                        heroAppointmentType ||
-                        undefined,
-
+                        heroAppointmentType || undefined,
                       selectedDoctorId:
-                        heroDoctorId ||
-                        undefined,
+                        heroDoctorId || undefined,
                     },
                   });
                 }}
               >
-
                 {/* Appointment Type */}
 
                 <div className="ek-hero-card-field">
-
                   <label htmlFor="heroAppointmentType">
-                    {t(
-                      "home.booking.appointmentType.title"
-                    )}
+                    {t("home.booking.appointmentType.title")}
                   </label>
 
                   <select
                     id="heroAppointmentType"
                     value={heroAppointmentType}
                     onChange={(e) =>
-                      setHeroAppointmentType(
-                        e.target.value
-                      )
+                      setHeroAppointmentType(e.target.value)
                     }
                   >
-
                     <option value="">
                       {t(
                         "home.booking.appointmentType.placeholder"
@@ -596,39 +505,28 @@ export default function ElkamalDentalClinic() {
                         "home.booking.appointmentType.consultation"
                       )}
                     </option>
-
                   </select>
-
                 </div>
 
                 {/* Doctor */}
 
                 <div className="ek-hero-card-field">
-
                   <label htmlFor="heroDoctor">
-                    {t(
-                      "home.booking.doctor.title"
-                    )}
+                    {t("home.booking.doctor.title")}
                   </label>
 
                   <select
                     id="heroDoctor"
                     value={heroDoctorId}
                     onChange={(e) =>
-                      setHeroDoctorId(
-                        e.target.value
-                      )
+                      setHeroDoctorId(e.target.value)
                     }
                   >
-
                     <option value="">
-                      {t(
-                        "gallery.allDoctors"
-                      )}
+                      {t("gallery.allDoctors")}
                     </option>
 
                     {doctors.map((d) => {
-
                       const translatedDoctor =
                         getDoctorTranslation(
                           d.id,
@@ -638,17 +536,12 @@ export default function ElkamalDentalClinic() {
                         );
 
                       return (
-                        <option
-                          key={d.id}
-                          value={d.id}
-                        >
+                        <option key={d.id} value={d.id}>
                           {translatedDoctor.name}
                         </option>
                       );
                     })}
-
                   </select>
-
                 </div>
 
                 {/* Submit */}
@@ -657,21 +550,13 @@ export default function ElkamalDentalClinic() {
                   type="submit"
                   className="ek-hero-card-submit"
                 >
-                  {t(
-                    "home.hero.bookBtn"
-                  )}
+                  {t("home.hero.bookBtn")}
                 </button>
-
               </form>
-
             ) : (
-
               <div className="ek-hero-card-contact">
-
                 <p className="ek-hero-card-contact-label">
-                  {t(
-                    "home.footer.contactUs"
-                  )}
+                  {t("home.footer.contactUs")}
                 </p>
 
                 <a
@@ -681,16 +566,8 @@ export default function ElkamalDentalClinic() {
                     ""
                   )}`}
                 >
-
-                  <Icon
-                    name="call"
-                    size={20}
-                  />
-
-                  <span dir="ltr">
-                    {CLINIC_PHONE}
-                  </span>
-
+                  <Icon name="call" size={20} />
+                  <span dir="ltr">{CLINIC_PHONE}</span>
                 </a>
 
                 <a
@@ -700,17 +577,11 @@ export default function ElkamalDentalClinic() {
                     ""
                   )}`}
                 >
-                  {t(
-                    "home.hero.callNow"
-                  )}
+                  {t("home.hero.callNow")}
                 </a>
-
               </div>
-
             )}
-
           </div>
-
         </section>
 
         {/* =================================================
@@ -718,308 +589,191 @@ export default function ElkamalDentalClinic() {
         ================================================= */}
 
         <section className="ek-trust">
-
           <div className="ek-container">
-
             <div className="ek-trust-grid">
-
               {/* Specialists */}
-
               <div className="ek-trust-item">
-
                 <div className="ek-trust-icon">
-
                   <Icon
                     name="workspace_premium"
                     fill
                     size={22}
                   />
-
                 </div>
 
                 <div>
-
                   <h3 className="ek-trust-title">
-                    {t(
-                      "home.trust.specialistsTitle"
-                    )}
+                    {t("home.trust.specialistsTitle")}
                   </h3>
 
                   <p className="ek-trust-sub">
-                    {t(
-                      "home.trust.specialistsSub"
-                    )}
+                    {t("home.trust.specialistsSub")}
                   </p>
-
                 </div>
-
               </div>
 
               {/* Treatment */}
-
               <div className="ek-trust-item">
-
                 <div className="ek-trust-icon">
-
                   <Icon
                     name="medical_information"
                     fill
                     size={22}
                   />
-
                 </div>
 
                 <div>
-
                   <h3 className="ek-trust-title">
-                    {t(
-                      "home.trust.treatmentTitle"
-                    )}
+                    {t("home.trust.treatmentTitle")}
                   </h3>
 
                   <p className="ek-trust-sub">
-                    {t(
-                      "home.trust.treatmentSub"
-                    )}
+                    {t("home.trust.treatmentSub")}
                   </p>
-
                 </div>
-
               </div>
 
               {/* Environment */}
-
               <div className="ek-trust-item">
-
                 <div className="ek-trust-icon">
-
-                  <Icon
-                    name="spa"
-                    fill
-                    size={22}
-                  />
-
+                  <Icon name="spa" fill size={22} />
                 </div>
 
                 <div>
-
                   <h3 className="ek-trust-title">
-                    {t(
-                      "home.trust.environmentTitle"
-                    )}
+                    {t("home.trust.environmentTitle")}
                   </h3>
 
                   <p className="ek-trust-sub">
-                    {t(
-                      "home.trust.environmentSub"
-                    )}
+                    {t("home.trust.environmentSub")}
                   </p>
-
                 </div>
-
               </div>
-
             </div>
-
           </div>
-
         </section>
 
         {/* =================================================
             SERVICES
         ================================================= */}
 
-        <section
-          id="services"
-          className="ek-section ek-container"
-        >
-
+        <section id="services" className="ek-section ek-container">
           <div className="ek-services-head">
-
             <h2 className="ek-section-title">
-              {t(
-                "home.services.sectionTitle"
-              )}
+              {t("home.services.sectionTitle")}
             </h2>
 
             <p className="ek-section-desc">
-              {t(
-                "home.services.sectionDesc"
-              )}
+              {t("home.services.sectionDesc")}
             </p>
-
           </div>
 
           <div className="ek-services-grid">
-
             {/* GENERAL DENTISTRY */}
-
             <div className="ek-service-card ek-service-span2">
-
               <div className="ek-service-decor" />
 
               <div className="ek-service-heading">
-
                 <div className="ek-service-icon">
-
                   <Icon
                     name={serviceMeta[0].icon}
                     fill
                     size={30}
                   />
-
                 </div>
 
                 <h3 className="ek-service-title">
-
                   {t(
                     `home.services.${serviceMeta[0].id}.title`
                   )}
-
                 </h3>
-
               </div>
 
               <div className="ek-service-content">
-
                 <p className="ek-service-desc">
-
                   {t(
                     `home.services.${serviceMeta[0].id}.desc`
                   )}
-
                 </p>
-
               </div>
-
             </div>
 
             {/* COSMETIC DENTISTRY */}
-
             <div className="ek-service-card ek-service-cosmetic">
-
               <div className="ek-service-heading">
-
                 <div className="ek-service-icon on-secondary">
-
                   <Icon
                     name={serviceMeta[1].icon}
                     fill
                     size={28}
                   />
-
                 </div>
 
                 <h3 className="ek-service-title">
-
                   {t(
                     `home.services.${serviceMeta[1].id}.title`
                   )}
-
                 </h3>
-
               </div>
 
               <div className="ek-service-content">
-
                 <p className="ek-service-desc small">
-
                   {t(
                     `home.services.${serviceMeta[1].id}.desc`
                   )}
-
                 </p>
-
               </div>
-
             </div>
 
             {/* ORTHODONTICS */}
-
             <div className="ek-service-card">
-
               <div className="ek-service-heading">
-
                 <div className="ek-service-icon on-variant">
-
                   <Icon
                     name={serviceMeta[2].icon}
                     fill
                     size={28}
                   />
-
                 </div>
 
                 <h3 className="ek-service-title">
-
                   {t(
                     `home.services.${serviceMeta[2].id}.title`
                   )}
-
                 </h3>
-
               </div>
 
               <div className="ek-service-content">
-
                 <p className="ek-service-desc small">
-
                   {t(
                     `home.services.${serviceMeta[2].id}.desc`
                   )}
-
                 </p>
-
               </div>
-
             </div>
 
             {/* RESTORATIVE DENTISTRY */}
-
             <div className="ek-service-card ek-service-span2 ek-service-restorative">
-
               <div className="ek-service-restorative-bg" />
-
               <div className="ek-service-restorative-fade" />
 
               <div className="ek-service-heading">
-
                 <div className="ek-service-icon on-primary">
-
-                  <Icon
-                    name="dentistry"
-                    fill
-                    size={28}
-                  />
-
+                  <Icon name="dentistry" fill size={28} />
                 </div>
 
                 <h3 className="ek-service-title">
-
-                  {t(
-                    "home.services.restorative.title"
-                  )}
-
+                  {t("home.services.restorative.title")}
                 </h3>
-
               </div>
 
               <div className="ek-service-restorative-copy ek-service-content">
-
                 <p className="ek-service-desc">
-
-                  {t(
-                    "home.services.restorative.desc"
-                  )}
-
+                  {t("home.services.restorative.desc")}
                 </p>
-
               </div>
-
             </div>
-
           </div>
-
         </section>
 
         {/* =================================================
@@ -1027,122 +781,75 @@ export default function ElkamalDentalClinic() {
         ================================================= */}
 
         <section className="ek-section ek-container">
-
           <div className="ek-section-head">
-
             <div className="ek-content-narrow">
-
               <h2 className="ek-section-title">
-                {t(
-                  "home.cases.sectionTitle"
-                )}
+                {t("home.cases.sectionTitle")}
               </h2>
 
               <p className="ek-section-desc">
-                {t(
-                  "home.cases.sectionDesc"
-                )}
+                {t("home.cases.sectionDesc")}
               </p>
-
             </div>
-
           </div>
 
           {/* Loading */}
-
           {loadingCases && (
-
             <div className="ek-cases-carousel">
-
               {[1, 2, 3, 4].map((i) => (
-
                 <div
                   className="ek-case-mini-card ek-skeleton-card"
                   key={i}
                 >
-
                   <div className="ek-case-mini-images">
-
                     <div className="ek-skeleton-block ek-case-mini-image-wrap" />
-
                     <div className="ek-skeleton-block ek-case-mini-image-wrap" />
-
                   </div>
 
                   <div className="ek-case-mini-body">
-
                     <div className="ek-skeleton-line ek-skeleton-line-sm" />
-
                     <div className="ek-skeleton-line ek-skeleton-line-lg" />
-
                   </div>
-
                 </div>
-
               ))}
-
             </div>
-
           )}
 
           {/* Error */}
-
-          {!loadingCases &&
-            casesError && (
-              <p>
-                {t(
-                  "home.cases.error"
-                )}
-              </p>
-            )}
+          {!loadingCases && casesError && (
+            <p>{t("home.cases.error")}</p>
+          )}
 
           {/* Empty */}
-
           {!loadingCases &&
             !casesError &&
             cases.length === 0 && (
-              <p>
-                {t(
-                  "home.cases.empty"
-                )}
-              </p>
+              <p>{t("home.cases.empty")}</p>
             )}
 
           {/* Cases */}
-
           {!loadingCases &&
             !casesError &&
             cases.length > 0 && (
-
               <div
                 className="ek-cases-carousel"
                 ref={casesCarouselRef}
               >
-
                 {cases.map((c) => (
-
                   <CaseMiniCard
                     key={c.id}
                     data={c}
-                    beforeLabel={t(
-                      "home.cases.before"
-                    )}
-                    afterLabel={t(
-                      "home.cases.after"
-                    )}
+                    beforeLabel={t("home.cases.before")}
+                    afterLabel={t("home.cases.after")}
                     onOpenDoctor={() =>
                       navigate(
                         `/gallery?doctor=${c.doctorId}`
                       )
                     }
                   />
-
                 ))}
-
               </div>
-
             )}
-
         </section>
 
         {/* =================================================
@@ -1153,57 +860,34 @@ export default function ElkamalDentalClinic() {
           id="doctors"
           className="ek-doctors-section ek-section"
         >
-
           <div className="ek-container">
-
             <div className="ek-section-head">
-
               <div className="ek-content-narrow">
-
                 <h2 className="ek-section-title">
-                  {t(
-                    "home.doctors.sectionTitle"
-                  )}
+                  {t("home.doctors.sectionTitle")}
                 </h2>
 
                 <p className="ek-section-desc">
-                  {t(
-                    "home.doctors.sectionDesc"
-                  )}
+                  {t("home.doctors.sectionDesc")}
                 </p>
-
               </div>
-
             </div>
 
             <div className="ek-doctors-grid">
-
               {/* Loading */}
-
               {loadingDoctors && (
-                <p>
-                  {t(
-                    "home.doctors.loading"
-                  )}
-                </p>
+                <p>{t("home.doctors.loading")}</p>
               )}
 
               {/* Error */}
-
               {doctorsError && (
-                <p>
-                  {t(
-                    "home.doctors.error"
-                  )}
-                </p>
+                <p>{t("home.doctors.error")}</p>
               )}
 
               {/* Doctors */}
-
               {!loadingDoctors &&
                 !doctorsError &&
                 doctors.map((d) => {
-
                   const translatedDoctor =
                     getDoctorTranslation(
                       d.id,
@@ -1217,60 +901,38 @@ export default function ElkamalDentalClinic() {
                       className="ek-doctor-card"
                       key={d.id}
                     >
-
                       <div className="ek-doctor-photo">
-
-                        <img
-                          src={doctorImages[d.id]}
+                        <DoctorAvatar
+                          src={d.profileImageUrl}
                           alt={`Portrait of ${translatedDoctor.name}`}
                         />
-
                       </div>
 
                       <div className="ek-doctor-info">
-
                         <div className="ek-doctor-heading">
-
                           <h3 className="ek-doctor-name">
-
                             {translatedDoctor.name}
-
                           </h3>
 
                           <span className="ek-doctor-badge">
-
                             {translatedDoctor.specialty}
-
                           </span>
-
                         </div>
 
                         <div className="ek-doctor-avail">
-
-                          <Icon
-                            name="medical_information"
-                          />
+                          <Icon name="medical_information" />
 
                           <span>
-
                             {translatedDoctor.bio}
-
                           </span>
-
                         </div>
-
                       </div>
-
                     </div>
                   );
                 })}
-
             </div>
-
           </div>
-
         </section>
-
       </main>
 
       {/* =================================================
@@ -1278,269 +940,140 @@ export default function ElkamalDentalClinic() {
       ================================================= */}
 
       <footer className="ek-footer">
-
         <div className="ek-container ek-footer-grid">
-
           {/* Brand */}
-
           <div className="ek-footer-brand">
-
             <a href="#">
-
               <img
                 alt="ELKAMAL Dental Clinic Logo"
                 src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjiHZ7i-qSZICLitRFThdvpmWw_IcS0yNrZTE4Ygr_z8smUf3mGaeY3jafdKomhjrTqSLRxWR_t_JcxT0GOOuIlCwb7DYU7fBtUdCLEnK7VjDnRWuVDMqZZ8LVs2_zj0O4gs3vjdBNfcHsfa8GiMrxUTcNRY8_I8Ssr98EyBpBgK2DcJHgXnsJ3m4CKF-RFOE4LU_39pJlhhO8Tk7UB5LpLogPnOM0sFFBZLWM21sFwOtxltifuqSEsXKYbESDwl7NoCo"
               />
-
             </a>
 
-            <p>
-              {t(
-                "home.footer.brandDesc"
-              )}
-            </p>
+            <p>{t("home.footer.brandDesc")}</p>
 
             <div className="ek-footer-social">
-
-              <a
-                aria-label="Facebook"
-                href="#"
-              >
-
+              <a aria-label="Facebook" href="#">
                 <Icon name="thumb_up" />
-
               </a>
 
-              <a
-                aria-label="Instagram"
-                href="#"
-              >
-
+              <a aria-label="Instagram" href="#">
                 <Icon name="photo_camera" />
-
               </a>
-
             </div>
-
           </div>
 
           {/* Quick Links */}
-
           <div>
-
             <h4 className="ek-footer-heading">
-
-              {t(
-                "home.footer.quickLinks"
-              )}
-
+              {t("home.footer.quickLinks")}
             </h4>
 
             <ul className="ek-footer-links">
-
               <li>
-
                 <a
                   href="#services"
                   onClick={(e) => {
-
                     e.preventDefault();
 
                     document
-                      .getElementById(
-                        "services"
-                      )
+                      .getElementById("services")
                       ?.scrollIntoView({
                         behavior: "smooth",
                       });
-
                   }}
                 >
-
-                  {t(
-                    "home.footer.servicesLink"
-                  )}
-
+                  {t("home.footer.servicesLink")}
                 </a>
-
               </li>
 
               <li>
-
                 <a
                   href="#doctors"
                   onClick={(e) => {
-
                     e.preventDefault();
 
                     document
-                      .getElementById(
-                        "doctors"
-                      )
+                      .getElementById("doctors")
                       ?.scrollIntoView({
                         behavior: "smooth",
                       });
-
                   }}
                 >
-
-                  {t(
-                    "home.footer.ourDoctorsLink"
-                  )}
-
+                  {t("home.footer.ourDoctorsLink")}
                 </a>
-
               </li>
 
               <li>
-
                 <a
                   href="/booking"
                   onClick={(e) => {
-
                     e.preventDefault();
 
-                    navigate(
-                      "/booking"
-                    );
-
+                    navigate("/booking");
                   }}
                 >
-
-                  {t(
-                    "home.footer.bookAppointmentLink"
-                  )}
-
+                  {t("home.footer.bookAppointmentLink")}
                 </a>
-
               </li>
-
             </ul>
-
           </div>
 
           {/* Legal */}
-
           <div>
-
             <h4 className="ek-footer-heading">
-
-              {t(
-                "home.footer.legal"
-              )}
-
+              {t("home.footer.legal")}
             </h4>
 
             <ul className="ek-footer-links">
-
               <li>
-
                 <a href="#">
-
-                  {t(
-                    "home.footer.privacyPolicy"
-                  )}
-
+                  {t("home.footer.privacyPolicy")}
                 </a>
-
               </li>
 
               <li>
-
                 <a href="#">
-
-                  {t(
-                    "home.footer.termsOfService"
-                  )}
-
+                  {t("home.footer.termsOfService")}
                 </a>
-
               </li>
-
             </ul>
-
           </div>
 
           {/* Contact */}
-
           <div>
-
             <h4 className="ek-footer-heading">
-
-              {t(
-                "home.footer.contactUs"
-              )}
-
+              {t("home.footer.contactUs")}
             </h4>
 
             <ul className="ek-footer-contact">
-
               <li>
-
-                <Icon
-                  name="location_on"
-                />
-
-                <span>
-
-                  {t(
-                    "header.clinicAddress"
-                  )}
-
-                </span>
-
+                <Icon name="location_on" />
+                <span>{t("header.clinicAddress")}</span>
               </li>
 
               <li>
-
                 <Icon name="call" />
-
-                <span dir="ltr">
-
-                  {CLINIC_PHONE}
-
-                </span>
-
+                <span dir="ltr">{CLINIC_PHONE}</span>
               </li>
 
               <li>
-
                 <Icon name="mail" />
-
-                <span>
-
-                  info@elkamalclinic.com
-
-                </span>
-
+                <span>info@elkamalclinic.com</span>
               </li>
-
             </ul>
-
           </div>
-
         </div>
 
         {/* Footer Bottom */}
-
         <div className="ek-footer-bottom">
-
           <div className="ek-footer-bottom-inner">
-
             <p className="ek-footer-copy">
-
-              {t(
-                "home.footer.copyright"
-              )}
-
+              {t("home.footer.copyright")}
             </p>
-
           </div>
-
         </div>
-
       </footer>
-
     </div>
   );
 }

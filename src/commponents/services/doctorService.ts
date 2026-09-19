@@ -5,6 +5,7 @@ export interface Doctor {
   name: string;
   specialty: string;
   bio: string;
+  profileImageUrl?: string;
 }
 
 export const getDoctors = async (): Promise<Doctor[]> => {
@@ -24,6 +25,7 @@ export interface DoctorPhoto {
   afterImageUrl: string;
   description: string;
   displayOrder: number;
+  
 }
 
 export const getDoctorPhotos = async (

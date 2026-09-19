@@ -1256,6 +1256,21 @@ button {
 }
 
 /* =========================================================
+   DOCTOR PHOTO FALLBACK
+   Shown when a doctor has no profileImageUrl yet.
+========================================================= */
+
+.ek-doctor-photo-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--surface-container, #f0eded);
+  color: var(--outline, #74777e);
+}
+
+/* =========================================================
    FOOTER
 ========================================================= */
 

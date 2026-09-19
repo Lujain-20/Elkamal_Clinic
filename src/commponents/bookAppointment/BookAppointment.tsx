@@ -71,6 +71,59 @@ const formatDateForApi = (date: Date) => {
 };
 
 /* =========================================================
+   DOCTOR AVATAR
+   Renders the real photo (profileImageUrl, uploaded via
+   POST /api/doctors/upload-image and stored on the doctor
+   via POST /api/doctors). Falls back to initials on a
+   gradient background if the doctor has no photo yet.
+========================================================= */
+
+interface DoctorAvatarProps {
+  doctor: Doctor;
+  translatedName: string;
+  sizeClass: string;
+}
+
+function DoctorAvatar({
+  doctor,
+  translatedName,
+  sizeClass,
+}: DoctorAvatarProps) {
+  if (doctor.profileImageUrl) {
+    return (
+      <div
+        className={`${sizeClass} rounded-full overflow-hidden shrink-0 bg-[#e4e2e1]`}
+      >
+        <img
+          src={doctor.profileImageUrl}
+          alt={translatedName}
+          className="w-full h-full object-cover"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`${sizeClass} rounded-full overflow-hidden shrink-0 bg-gradient-to-br from-[#1d324e] to-[#344966] flex items-center justify-center`}
+    >
+      <span
+        className="text-white text-[22px] font-semibold"
+        style={{
+          fontFamily: "'Manrope', sans-serif",
+        }}
+      >
+        {translatedName
+          ?.split(" ")
+          .map((n) => n[0])
+          .slice(0, 2)
+          .join("")}
+      </span>
+    </div>
+  );
+}
+
+/* =========================================================
    COMPONENT
 ========================================================= */
 
@@ -164,9 +217,7 @@ function Booking() {
   ========================================================= */
 
   const [selectedAppointmentType, setSelectedAppointmentType] =
-    useState<
-      CreateAppointmentData["appointmentType"] | null
-    >(null);
+  useState<CreateAppointmentData["appointmentType"] | null >(null);
 
   const [selectedDoctorId, setSelectedDoctorId] =
     useState<string>("");
@@ -401,10 +452,7 @@ function Booking() {
 
           if (cancelled) return;
 
-          const map: Record<
-            string,
-            boolean
-          > = {};
+          const map: Record<string,boolean> = {};
 
           results.forEach(
             ({
@@ -1513,25 +1561,11 @@ function Booking() {
                       }`}
                     >
 
-                      <div className="w-20 h-20 rounded-full overflow-hidden shrink-0 bg-gradient-to-br from-[#1d324e] to-[#344966] flex items-center justify-center">
-
-                        <span
-                          className="text-white text-[22px] font-semibold"
-                          style={{
-                            fontFamily:
-                              "'Manrope', sans-serif",
-                          }}
-                        >
-                          {doctor.name
-                            ?.split(" ")
-                            .map(
-                              (n) => n[0]
-                            )
-                            .slice(0, 2)
-                            .join("")}
-                        </span>
-
-                      </div>
+                      <DoctorAvatar
+                        doctor={doctor}
+                        translatedName={translatedDoctor.name}
+                        sizeClass="w-20 h-20"
+                      />
 
                       <div className="flex-grow">
 
@@ -1636,14 +1670,20 @@ function Booking() {
 
               <div className="bg-white rounded-xl p-4 shadow-sm border border-[#c4c6ce]/30 flex items-center gap-4">
 
-                <div className="w-16 h-16 rounded-full overflow-hidden shrink-0 bg-[#e4e2e1] flex items-center justify-center">
-
-                  <Stethoscope
-                    size={27}
-                    className="text-[#1d324e]"
+                {selectedDoctorData && (
+                  <DoctorAvatar
+                    doctor={selectedDoctorData}
+                    translatedName={
+                      getDoctorTranslation(
+                        selectedDoctorData.id,
+                        selectedDoctorData.name,
+                        selectedDoctorData.bio,
+                        selectedDoctorData.specialty
+                      ).name
+                    }
+                    sizeClass="w-16 h-16"
                   />
-
-                </div>
+                )}
 
                 <div>
 
