@@ -1,150 +1,30 @@
 /* =========================================================
-   HEADER
-   Outer wrapper is NOT sticky/positioned itself — only
-   .ek-header-main (the logo/nav row) is. The top bar sits
-   in normal document flow above it, so it scrolls away
-   naturally as the page scrolls: no JS, no height-jump,
-   no flicker.
+   HEADER — Light header tuned for the MK Elkamal logo
+   The logo's wordmark and tooth icon are navy + gold with a
+   transparent background, so the header itself is now white:
+   on the old navy header the navy parts of the logo all but
+   disappeared. Gold stays the CTA/accent color throughout,
+   exactly like before, just flipped onto a light surface.
 ========================================================= */
 
 .ek-header {
   position: relative;
   z-index: 1000;
+  /* Keep the header's layout LTR always (logo left, nav/CTA
+     right) even when the rest of the site switches to Arabic
+     and gets dir="rtl". Only the text inside changes language;
+     the structure never mirrors. */
+  direction: ltr;
+  unicode-bidi: isolate;
 }
 
 .ek-header-main {
   position: sticky;
   top: 0;
   z-index: 1000;
-  background-color: rgba(251, 249, 248, 0.97);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid rgba(196, 198, 206, 0.3);
-  box-shadow: 0 2px 14px rgba(29, 50, 78, 0.05);
-}
-
-/* =========================================================
-   TOP INFO BAR
-   Visible on desktop/tablet only. Normal document flow —
-   it simply scrolls off the top like any other content,
-   which is what makes the header feel like it "shrinks"
-   once you scroll, with zero JS involved.
-========================================================= */
-
-.ek-topbar {
-  display: none;
-  background-color: var(--primary, #1d324e);
-  color: #ffffff;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-@media (min-width: 1024px) {
-  .ek-topbar {
-    display: flex;
-  }
-}
-
-.ek-topbar-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding-top: 8px;
-  padding-bottom: 8px;
-  font-size: 12.5px;
-}
-
-.ek-topbar-left,
-.ek-topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.ek-topbar-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: rgba(255, 255, 255, 0.85);
-  white-space: nowrap;
-}
-
-.ek-topbar-item .icon {
-  color: var(--secondary-fixed-dim, #e9c176);
-}
-
-.ek-topbar-lang {
-  display: flex;
-  align-items: center;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
-  padding: 3px;
-  gap: 2px;
-}
-
-.ek-topbar-lang button {
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-family: var(--font-display, "Manrope", sans-serif);
-  font-weight: 600;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.75);
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.ek-topbar-lang button.active {
-  background-color: var(--secondary-fixed-dim, #e9c176);
-  color: var(--primary, #1d324e);
-}
-
-.ek-topbar-phone {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: rgba(255, 255, 255, 0.85);
-  white-space: nowrap;
-  transition: color 0.2s ease;
-}
-
-.ek-topbar-phone:hover {
-  color: #ffffff;
-}
-
-.ek-topbar-emergency {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--secondary-fixed-dim, #e9c176);
-  font-weight: 700;
-  white-space: nowrap;
-  padding: 4px 12px;
-  border-radius: 999px;
-  background-color: rgba(233, 193, 118, 0.12);
-  transition: background-color 0.2s ease;
-}
-
-.ek-topbar-emergency:hover {
-  background-color: rgba(233, 193, 118, 0.2);
-}
-
-.ek-topbar-emergency-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background-color: #e9c176;
-  animation: topbarPulse 1.6s ease-in-out infinite;
-  flex-shrink: 0;
-}
-
-@keyframes topbarPulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(1.4); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ek-topbar-emergency-dot {
-    animation: none;
-  }
+  background-color: #ffffff;
+  border-bottom: 1px solid #eceef1;
+  box-shadow: 0 4px 20px rgba(29, 50, 78, 0.06);
 }
 
 /* =========================================================
@@ -155,25 +35,56 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 14px;
-  padding-bottom: 14px;
+  padding-top: 12px;
+  padding-bottom: 12px;
 }
 
 .ek-header-left { display: flex; align-items: center; gap: 16px; }
 
-.ek-logo { display: flex; align-items: center; gap: 8px; }
-.ek-logo img { height: 40px; width: auto; object-fit: contain; }
-.ek-logo-text {
-  display: block;
-  font-family: var(--font-display, "Manrope", sans-serif);
-  font-weight: 700;
-  font-size: 15px;
+.ek-logo { display: flex; align-items: center; }
+.ek-logo img { height: 48px; width: auto; object-fit: contain; }
+
+/* ---- Clinic phone, next to the logo ---- */
+
+.ek-header-phone {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 16px;
+  margin-left: 4px;
+  border-left: 1px solid #e3e6ea;
   color: var(--primary, #1d324e);
-  letter-spacing: -0.01em;
+  font-family: var(--font-display, "Manrope", sans-serif);
+  font-weight: 600;
+  font-size: 13.5px;
+  white-space: nowrap;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.ek-header-phone .icon {
+  color: var(--secondary, #775a19);
+}
+
+.ek-header-phone:hover {
+  opacity: 0.8;
+}
+
+/* On narrow screens, keep just the tappable phone icon so it
+   never crowds the logo/menu button — the number still shows
+   from 480px up. */
+@media (max-width: 479px) {
+  .ek-header-phone-number {
+    display: none;
+  }
+
+  .ek-header-phone {
+    padding-left: 10px;
+    margin-left: 0;
+  }
 }
 
 .ek-nav { display: none; align-items: center; gap: 28px; margin-right: 8px; }
-.ek-nav a {
+.ek-header .ek-nav a {
   position: relative;
   font-family: var(--font-display, "Manrope", sans-serif);
   font-weight: 600;
@@ -190,16 +101,179 @@
   bottom: -2px;
   width: 0%;
   height: 2px;
-  background-color: var(--secondary, #775a19);
+  background-color: var(--secondary-fixed-dim, #e9c176);
   transition: width 0.2s ease;
 }
-.ek-nav a:hover { color: var(--secondary, #775a19); }
-.ek-nav a:hover::after { width: 100%; }
+.ek-header .ek-nav a:hover { color: var(--secondary, #775a19); }
+.ek-header .ek-nav a:hover::after  {
+   content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 0%;
+  height: 2px;
+  background-color: var(--secondary-fixed-dim, #e9c176);
+  transition: width 0.2s ease;
+  width: 100%; }
 
-.ek-header-right { display: flex; align-items: center; gap: 20px; }
+.ek-header-right { display: flex; align-items: center; gap: 16px; }
+
+/* ---- Language toggle — desktop only ---- */
+
+.ek-header-lang {
+  display: none;
+  align-items: center;
+  background-color: #f1f2f4;
+  border-radius: 999px;
+  padding: 4px;
+  gap: 2px;
+  border: 1px solid #e6e8eb;
+}
+
+@media (min-width: 1024px) {
+  .ek-header-lang {
+    display: flex;
+  }
+}
+
+.ek-header-lang button {
+  padding: 5px 13px;
+  border-radius: 999px;
+  font-family: var(--font-display, "Manrope", sans-serif);
+  font-weight: 600;
+  font-size: 12.5px;
+  color: #667085;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.ek-header-lang button.active {
+  background-color: var(--primary, #1d324e);
+  color: #ffffff;
+}
+
+
+
+/*  */
+
+/* =========================================================
+   TOP BAR (blue strip above the main header)
+========================================================= */
+
+.ek-topbar {
+  display: none;
+  background-color: var(--primary, #1d324e);
+  color: #ffffff;
+}
+
+.ek-topbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-size: 13px;
+}
+
+.ek-topbar-left,
+.ek-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.ek-topbar-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+a.ek-topbar-item:hover {
+  color: var(--secondary-fixed-dim, #e9c176);
+}
+
+.ek-topbar-item .icon {
+  color: var(--secondary-fixed-dim, #e9c176);
+}
+
+.ek-topbar-emergency {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background-color: rgba(233, 193, 118, 0.15);
+  color: var(--secondary-fixed-dim, #e9c176);
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background-color 0.2s ease;
+}
+
+.ek-topbar-emergency:hover {
+  background-color: rgba(233, 193, 118, 0.28);
+}
+
+.ek-topbar-lang {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.ek-topbar-lang button {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-family: var(--font-display, "Manrope", sans-serif);
+  font-weight: 600;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.ek-topbar-lang button.active {
+  background-color: var(--secondary-fixed-dim, #e9c176);
+  color: var(--primary, #1d324e);
+}
+
+@media (min-width: 1024px) {
+  .ek-topbar {
+    display: block;
+  }
+}
+
+
+.ek-topbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-size: 13px;
+  flex-wrap: wrap;         /* يسمح بالنزول لسطر تاني بدل الاختفاء */
+  row-gap: 6px;
+   min-width: 0; 
+}
+
+.ek-topbar-left,
+.ek-topbar-right {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
+.ek-topbar-lang {
+  flex-shrink: 0;           /* الزرار ميتقصش أبدًا */
+}
 
 /* =========================================================
    APPOINTMENTS DROPDOWN (desktop only, 1024px+)
+   — the main CTA of the header, kept gold so it still pops,
+   now against the white header background.
 ========================================================= */
 
 .ek-appointments-dropdown {
@@ -219,11 +293,15 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background-color: var(--secondary-fixed-dim, #e9c176) !important;
+  color: var(--primary, #1d324e) !important;
+  box-shadow: 0 4px 14px rgba(233, 193, 118, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 
 .ek-appointments-button:hover {
   transform: translateY(-1px);
+  filter: brightness(1.05);
 }
 
 .ek-chevron-open {
@@ -240,7 +318,7 @@
   background: #ffffff;
   border: 1px solid #e8ecef;
   border-radius: 14px;
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.16);
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -311,7 +389,7 @@
    MOBILE MENU (dropdown panel)
 ========================================================= */
 
-.ek-menu-btn {
+.ek-header .ek-menu-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -322,9 +400,9 @@
   transition: background-color 0.2s ease;
 }
 
-.ek-menu-btn:hover,
-.ek-menu-btn:active {
-  background-color: rgba(29, 50, 78, 0.06);
+.ek-header .ek-menu-btn:hover,
+.ek-header .ek-menu-btn:active {
+  background-color: #f1f2f4;
 }
 
 .ek-mobile-menu {
@@ -335,7 +413,7 @@
   background: #ffffff;
   border-top: 1px solid #e8ecef;
   box-shadow: 0 16px 40px rgba(29, 50, 78, 0.14);
-  padding: 20px 20px 0;
+  padding: 20px 20px 20px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -482,30 +560,7 @@
   color: #775a19;
 }
 
-/* ---- Clinic info ---- */
-
-.ek-mobile-info {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  border-top: 1px solid #f0f1f3;
-  padding-top: 16px;
-}
-
-.ek-mobile-info-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  color: #667085;
-}
-
-.ek-mobile-info-item .icon {
-  color: #775a19;
-  flex-shrink: 0;
-}
-
-/* ---- Language: segmented control ---- */
+/* ---- Language: segmented control (mobile menu) ---- */
 
 .ek-mobile-lang {
   display: flex;
@@ -514,6 +569,9 @@
   border-radius: 999px;
   padding: 4px;
   gap: 2px;
+  margin-top: 4px;
+  border-top: 1px solid #f0f1f3;
+  padding-top: 16px;
 }
 
 .ek-mobile-lang button {
@@ -532,42 +590,6 @@
   color: #ffffff;
 }
 
-/* ---- Phone ---- */
-
-.ek-mobile-phone {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 13px 12px;
-  border-radius: 10px;
-  background: #f7f8f9;
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--primary, #1d324e);
-  text-decoration: none;
-}
-
-/* ---- Emergency: sticky footer bar, edge-to-edge ---- */
-
-.ek-mobile-emergency {
-  position: sticky;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 15px 20px;
-  margin: 4px -20px 0;
-  background-color: var(--primary, #1d324e);
-  font-weight: 700;
-  font-size: 14px;
-  color: var(--secondary-fixed-dim, #e9c176);
-  text-decoration: none;
-}
-
-.ek-mobile-emergency .icon {
-  color: var(--secondary-fixed-dim, #e9c176);
-}
-
 /* Mobile menu panel only relevant below desktop breakpoint */
 @media (min-width: 1024px) {
   .ek-mobile-menu {
@@ -575,29 +597,22 @@
   }
 }
 
-/* Below 1024px: the phone/lang blocks now live inside the
-   mobile menu, so avoid duplicating them in the bar itself. */
-@media (max-width: 1023px) {
-  .ek-lang-toggle {
-    display: none !important;
-  }
-}
-
 /* =========================================================
    RESPONSIVE UTILITIES USED ABOVE
-   (kept local to the header in case Home.css utilities
-   aren't loaded on every page that renders this header)
 ========================================================= */
 
 @media (min-width: 640px) { .sm-flex { display: flex; } }
 @media (min-width: 1024px) {
   .lg-flex { display: flex; }
   .lg-hidden { display: none; }
+  /* Higher-specificity backstop: .ek-header .ek-menu-btn sets
+     display:flex with 2 classes' worth of specificity, which
+     otherwise beats the plain .lg-hidden rule above and keeps
+     the hamburger visible on desktop. This wins that fight. */
+  .ek-header .ek-menu-btn.lg-hidden { display: none; }
 }
 @media (min-width: 768px) { .md-block { display: block; } .md-hidden { display: none; } }
 
-/* Material icon modifiers (safe to keep even if duplicated
-   elsewhere — identical rules don't conflict) */
 .icon-fill { font-variation-settings: "FILL" 1; }
 .icon-size-16 { font-size: 16px; }
 .icon-size-18 { font-size: 18px; }
@@ -605,19 +620,16 @@
 .icon-size-22 { font-size: 22px; }
 
 /* =========================================================
-   TABLET (1024px is the nav breakpoint; this covers iPad
-   widths where the top bar is still visible but tighter)
+   TABLET
 ========================================================= */
 
 @media (min-width: 1024px) and (max-width: 1180px) {
   .ek-nav { gap: 18px; }
-  .ek-header-right { gap: 14px; }
-  .ek-topbar-left,
-  .ek-topbar-right { gap: 12px; }
+  .ek-header-right { gap: 12px; }
 }
 
 /* =========================================================
-   MOBILE (small screens fine-tuning)
+   MOBILE
 ========================================================= */
 
 @media (max-width: 768px) {
@@ -625,4 +637,6 @@
     right: 0;
     width: 210px;
   }
+
+  .ek-logo img { height: 40px; }
 }

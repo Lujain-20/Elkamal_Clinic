@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
   ArrowLeft,
   ArrowRight,
@@ -20,42 +21,13 @@ import type {
   CreateAppointmentData,
   CreatedAppointment,
 } from "../services/appointmentService";
+
 import { AppointmentType } from "../../constant/appointment";
 import { useLanguage } from "../../i18n/LanguageContext";
+import { doctorTranslations } from "../../i18n/doctorTranslations";
 
 import "./BookAppointment.css";
 
-/* =========================================================
-   SERVICES
-========================================================= */
-
-const services = [
-  { id: "general" },
-  { id: "cosmetic" },
-  { id: "orthodontics" },
-  { id: "restorative" },
-];
-
-/* =========================================================
-   APPOINTMENT TYPE
-========================================================= */
-
-const getAppointmentType = (
-  serviceId: string
-): CreateAppointmentData["appointmentType"] => {
-  switch (serviceId) {
-    case "orthodontics":
-      return AppointmentType.OrthodonticFollowUp;
-
-    case "cosmetic":
-    case "restorative":
-      return AppointmentType.TreatmentSession;
-
-    case "general":
-    default:
-      return AppointmentType.Checkup;
-  }
-};
 /* =========================================================
    HELPERS
 ========================================================= */
@@ -106,6 +78,40 @@ function Booking() {
   const { lang, t } = useLanguage();
 
   const isArabic = lang === "ar";
+  // translet doctor 
+  const getDoctorTranslation = (
+  doctorId: string,
+  fallbackName: string,
+  fallbackBio: string,
+  fallbackSpecialty: string
+) => {
+  return (
+    doctorTranslations[lang][doctorId] || {
+      name: fallbackName,
+      bio: fallbackBio,
+      specialty: fallbackSpecialty,
+    }
+  );
+};
+
+  const location = useLocation();
+
+  /* =========================================================
+     LOCATION STATE
+  ========================================================= */
+
+  useEffect(() => {
+    const state = location.state as {
+      selectedDoctorId?: string;
+    } | null;
+
+    if (!state) return;
+
+    if (state.selectedDoctorId) {
+      setSelectedDoctorId(state.selectedDoctorId);
+      setCurrentStep(2);
+    }
+  }, [location.state]);
 
   /* =========================================================
      DOCTORS
@@ -157,8 +163,10 @@ function Booking() {
      SELECTED DATA
   ========================================================= */
 
-  const [selectedService, setSelectedService] =
-    useState<string>("");
+  const [selectedAppointmentType, setSelectedAppointmentType] =
+    useState<
+      CreateAppointmentData["appointmentType"] | null
+    >(null);
 
   const [selectedDoctorId, setSelectedDoctorId] =
     useState<string>("");
@@ -234,16 +242,6 @@ function Booking() {
   }, [t]);
 
   /* =========================================================
-     SELECTED SERVICE
-  ========================================================= */
-
-  const selectedServiceData =
-    services.find(
-      (service) =>
-        service.id === selectedService
-    );
-
-  /* =========================================================
      SELECTED DOCTOR
   ========================================================= */
 
@@ -252,68 +250,6 @@ function Booking() {
       (doctor) =>
         doctor.id === selectedDoctorId
     );
-
-  /* =========================================================
-     SERVICE TRANSLATIONS
-  ========================================================= */
-
-  const getServiceTitle = (
-    serviceId: string
-  ) => {
-    switch (serviceId) {
-      case "general":
-        return t(
-          "home.booking.service.general.title"
-        );
-
-      case "cosmetic":
-        return t(
-          "home.booking.service.cosmetic.title"
-        );
-
-      case "orthodontics":
-        return t(
-          "home.booking.service.orthodontics.title"
-        );
-
-      case "restorative":
-        return t(
-          "home.booking.service.restorative.title"
-        );
-
-      default:
-        return "";
-    }
-  };
-
-  const getServiceDescription = (
-    serviceId: string
-  ) => {
-    switch (serviceId) {
-      case "general":
-        return t(
-          "home.booking.service.general.description"
-        );
-
-      case "cosmetic":
-        return t(
-          "home.booking.service.cosmetic.description"
-        );
-
-      case "orthodontics":
-        return t(
-          "home.booking.service.orthodontics.description"
-        );
-
-      case "restorative":
-        return t(
-          "home.booking.service.restorative.description"
-        );
-
-      default:
-        return "";
-    }
-  };
 
   /* =========================================================
      LOAD AVAILABLE SLOTS
@@ -643,11 +579,78 @@ function Booking() {
   };
 
   /* =========================================================
+     SELECT APPOINTMENT TYPE
+  ========================================================= */
+
+  const handleAppointmentTypeSelect = (
+    type: CreateAppointmentData["appointmentType"]
+  ) => {
+    setSelectedAppointmentType(type);
+
+    /*
+     * عند تغيير نوع الموعد نبدأ اختيار الطبيب
+     * والموعد من جديد حتى لا نستخدم بيانات قديمة.
+     */
+
+    setSelectedDoctorId("");
+
+    setSelectedDate(null);
+
+    setSelectedTime("");
+
+    setSelectedSlot(null);
+
+    setAvailableSlots([]);
+
+    setDayAvailability({});
+
+    setAppointmentError("");
+  };
+
+  /* =========================================================
+     GET APPOINTMENT TYPE LABEL
+  ========================================================= */
+
+  const getAppointmentTypeLabel = () => {
+    if (
+      selectedAppointmentType ===
+      AppointmentType.Checkup
+    ) {
+      return isArabic
+        ? "كشف"
+        : "Checkup";
+    }
+
+    if (
+      selectedAppointmentType ===
+      AppointmentType.TreatmentSession
+    ) {
+      return isArabic
+        ? "اعادة الكشف"
+        : "Re-Checkup";
+    }
+
+    return "-";
+  };
+
+  /* =========================================================
      SUBMIT APPOINTMENT
   ========================================================= */
 
   const handleSubmitAppointment =
     async () => {
+      if (!selectedAppointmentType) {
+        setAppointmentError(
+          isArabic
+            ? "من فضلك اختر كشف أو اعادة الكشف"
+            : "Please choose Checkup or Re-Checkup"
+        );
+
+        setCurrentStep(1);
+
+        return;
+      }
+
       if (!selectedDoctorId) {
         setAppointmentError(
           t(
@@ -717,10 +720,18 @@ function Booking() {
           patientPhoneNumber:
             patientPhone.trim(),
 
+          /*
+           * كشف:
+           * AppointmentType.Checkup
+           *
+           * استشارة:
+           * AppointmentType.TreatmentSession
+           *
+           * الطبيب هو المسؤول عن تحديد العلاج المناسب
+           * بعد تقييم حالة المريض.
+           */
           appointmentType:
-            getAppointmentType(
-              selectedService
-            ),
+            selectedAppointmentType,
 
           scheduledAt,
 
@@ -783,19 +794,31 @@ function Booking() {
   ========================================================= */
 
   const handleContinue = () => {
+    /*
+     * STEP 1 - APPOINTMENT TYPE
+     */
+
     if (currentStep === 1) {
-      if (!selectedService) {
-        alert(
-          t(
-            "home.booking.errors.selectService"
-          )
+      if (!selectedAppointmentType) {
+        setAppointmentError(
+          isArabic
+            ? "من فضلك اختر كشف أو اعادة الكشف"
+            : "Please choose Checkup or Re-Checkup"
         );
+
         return;
       }
 
+      setAppointmentError("");
+
       setCurrentStep(2);
+
       return;
     }
+
+    /*
+     * STEP 2 - DOCTOR
+     */
 
     if (currentStep === 2) {
       if (!selectedDoctorId) {
@@ -810,6 +833,10 @@ function Booking() {
       setCurrentStep(3);
       return;
     }
+
+    /*
+     * STEP 3 - DATE & TIME
+     */
 
     if (currentStep === 3) {
       if (!selectedDate) {
@@ -926,9 +953,11 @@ function Booking() {
                   currentStep === 1
                     ? "0%"
                     : currentStep === 2
-                    ? "33%"
+                    ? "25%"
                     : currentStep === 3
-                    ? "66%"
+                    ? "50%"
+                    : currentStep === 4
+                    ? "75%"
                     : "100%",
               }}
             />
@@ -952,10 +981,11 @@ function Booking() {
               </div>
 
               <span className="text-[12px]">
-                {t(
-                  "home.booking.steps.service"
-                )}
+                {isArabic
+                  ? "نوع الموعد"
+                  : "Appointment Type"}
               </span>
+
             </div>
 
             {/* STEP 2 */}
@@ -981,6 +1011,7 @@ function Booking() {
                   "home.booking.steps.doctor"
                 )}
               </span>
+
             </div>
 
             {/* STEP 3 */}
@@ -1006,6 +1037,7 @@ function Booking() {
                   "home.booking.steps.dateTime"
                 )}
               </span>
+
             </div>
 
             {/* STEP 4 */}
@@ -1014,12 +1046,12 @@ function Booking() {
 
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  currentStep === 4
-                    ? "bg-[#fed488] text-[#785a1a]"
+                  currentStep >= 4
+                    ? "bg-[#1d324e] text-white"
                     : "bg-[#e4e2e1]"
                 }`}
               >
-                {currentStep === 4 ? (
+                {currentStep > 4 ? (
                   <Check size={16} />
                 ) : (
                   "4"
@@ -1031,6 +1063,7 @@ function Booking() {
                   "home.booking.steps.confirm"
                 )}
               </span>
+
             </div>
 
             {/* STEP 5 */}
@@ -1056,6 +1089,7 @@ function Booking() {
                   "home.booking.steps.done"
                 )}
               </span>
+
             </div>
 
           </div>
@@ -1063,198 +1097,301 @@ function Booking() {
         </section>
 
         {/* =====================================================
-            STEP 1 - SERVICE
+            STEP 1 - APPOINTMENT TYPE
         ===================================================== */}
 
         {currentStep === 1 && (
-  <section className="px-5 py-4 ek-step-fade">
-    
+          <section className="px-5 py-4 ek-step-fade">
+
             <div className="mb-6">
 
               <h2 className="text-[24px] font-semibold text-[#1d324e]">
-                {t(
-                  "home.booking.service.title"
-                )}
+                {isArabic
+                  ? "اختر نوع الموعد"
+                  : "Choose Appointment Type"}
               </h2>
 
               <p className="text-[14px] text-[#74777e] mt-2">
-                {t(
-                  "home.booking.service.description"
-                )}
+                {isArabic
+                  ? "اختر نوع الموعد المناسب لك، وسيقوم الطبيب بتحديد العلاج المناسب بعد التقييم."
+                  : "Choose the type of appointment you need. Your doctor will determine the appropriate treatment after evaluation."}
               </p>
 
             </div>
 
+            {/* APPOINTMENT TYPE CARDS */}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-              {services.map(
-                (service, index) => {
+              {/* =================================================
+                  CHECKUP
+              ================================================= */}
 
-                  const isSelected =
-                    selectedService ===
-                    service.id;
-
-                  return (
-                    <button
-                      key={service.id}
-                      type="button"
-                      onClick={() => {
-
-                        setSelectedService(
-                          service.id
-                        );
-
-                        setSelectedDoctorId(
-                          ""
-                        );
-
-                        setSelectedDate(
-                          null
-                        );
-
-                        setSelectedTime(
-                          ""
-                        );
-
-                        setSelectedSlot(
-                          null
-                        );
-
-                        setAvailableSlots(
-                          []
-                        );
-
-                        setDayAvailability(
-                          {}
-                        );
-
-                      }}
-                      className={`
-                        relative
-                        text-left
-                        rounded-2xl
-                        p-6
-                        min-h-[220px]
-                        transition-all
-                        duration-300
-                        overflow-hidden
-                        border
-                        ${
-                          isSelected
-                            ? "border-[#1d324e] bg-[#eef3f7] shadow-md scale-[1.01]"
-                            : "border-transparent bg-white shadow-sm hover:shadow-md hover:-translate-y-1"
-                        }
-                      `}
-                    >
-
-                      <div
-                        className={`
-                          absolute
-                          -right-10
-                          -top-10
-                          w-32
-                          h-32
-                          rounded-full
-                          opacity-10
-                          ${
-                            index === 0
-                              ? "bg-[#fed488]"
-                              : index === 1
-                              ? "bg-[#344966]"
-                              : index === 2
-                              ? "bg-[#78909c]"
-                              : "bg-[#1d324e]"
-                          }
-                        `}
-                      />
-
-                      {isSelected && (
-                        <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[#1d324e] flex items-center justify-center">
-                          <Check
-                            size={17}
-                            color="white"
-                            strokeWidth={3}
-                          />
-                        </div>
-                      )}
-
-                      <div
-                        className={`
-                          w-14
-                          h-14
-                          rounded-xl
-                          flex
-                          items-center
-                          justify-center
-                          mb-6
-                          ${
-                            index === 0
-                              ? "bg-[#fed488] text-[#785a1a]"
-                              : index === 1
-                              ? "bg-[#344966] text-white"
-                              : index === 2
-                              ? "bg-[#dce7ed] text-[#1d324e]"
-                              : "bg-[#1d324e] text-white"
-                          }
-                        `}
-                      >
-                        <Stethoscope
-                          size={28}
-                          strokeWidth={1.8}
-                        />
-                      </div>
-
-                      <div className="relative z-10">
-
-                        <h3 className="text-[19px] font-semibold text-[#1d324e]">
-                          {getServiceTitle(
-                            service.id
-                          )}
-                        </h3>
-
-                        <p className="text-[13px] text-[#74777e] mt-2 leading-6">
-                          {getServiceDescription(
-                            service.id
-                          )}
-                        </p>
-
-                      </div>
-
-                      <div
-                        className={`
-                          absolute
-                          bottom-5
-                          ${
-                            isArabic
-                              ? "left-6"
-                              : "right-6"
-                          }
-                          text-[12px]
-                          font-semibold
-                          uppercase
-                          tracking-wider
-                          ${
-                            isSelected
-                              ? "text-[#1d324e]"
-                              : "text-[#74777e]"
-                          }
-                        `}
-                      >
-                        {isSelected
-                          ? t(
-                              "home.booking.service.selected"
-                            )
-                          : t(
-                              "home.booking.service.select"
-                            )}
-                      </div>
-
-                    </button>
-                  );
+              <button
+                type="button"
+                onClick={() =>
+                  handleAppointmentTypeSelect(
+                    AppointmentType.Checkup
+                  )
                 }
-              )}
+                className={`
+                  relative
+                  ${
+                    isArabic
+                      ? "text-right"
+                      : "text-left"
+                  }
+                  rounded-2xl
+                  p-6
+                  min-h-[220px]
+                  overflow-hidden
+                  border
+                  transition-all
+                  duration-200
+                  ${
+                    selectedAppointmentType ===
+                    AppointmentType.Checkup
+                      ? "border-2 border-[#1d324e] bg-[#eef3f7] shadow-md"
+                      : "border-[#c4c6ce]/50 bg-white hover:border-[#1d324e] hover:shadow-sm"
+                  }
+                `}
+              >
+
+                <div
+                  className="
+                    absolute
+                    -right-10
+                    -top-10
+                    w-32
+                    h-32
+                    rounded-full
+                    bg-[#fed488]
+                    opacity-20
+                  "
+                />
+
+                <div
+                  className={`
+                    relative
+                    w-14
+                    h-14
+                    rounded-xl
+                    flex
+                    items-center
+                    justify-center
+                    mb-6
+                    ${
+                      selectedAppointmentType ===
+                      AppointmentType.Checkup
+                        ? "bg-[#1d324e] text-white"
+                        : "bg-[#eef3f7] text-[#1d324e]"
+                    }
+                  `}
+                >
+                  <Stethoscope
+                    size={28}
+                    strokeWidth={1.8}
+                  />
+                </div>
+
+                <div className="relative z-10">
+
+                  <h3 className="text-[19px] font-semibold text-[#1d324e]">
+                    {isArabic
+                      ? "كشف"
+                      : "Checkup"}
+                  </h3>
+
+                  <p className="text-[13px] text-[#74777e] mt-2 leading-6">
+                    {isArabic
+                      ? "فحص مبدئي للحالة وتقييم الأسنان مع الطبيب."
+                      : "An initial examination and evaluation of your dental condition."}
+                  </p>
+
+                </div>
+
+                <div
+                  className={`
+                    absolute
+                    bottom-5
+                    ${
+                      isArabic
+                        ? "left-6"
+                        : "right-6"
+                    }
+                    flex
+                    items-center
+                    gap-2
+                    text-[12px]
+                    font-semibold
+                    ${
+                      selectedAppointmentType ===
+                      AppointmentType.Checkup
+                        ? "text-[#1d324e]"
+                        : "text-[#74777e]"
+                    }
+                  `}
+                >
+
+                  {selectedAppointmentType ===
+                    AppointmentType.Checkup && (
+                    <span className="w-5 h-5 rounded-full bg-[#1d324e] text-white flex items-center justify-center">
+                      <Check size={13} />
+                    </span>
+                  )}
+
+                  {selectedAppointmentType ===
+                  AppointmentType.Checkup
+                    ? isArabic
+                      ? "تم الاختيار"
+                      : "Selected"
+                    : isArabic
+                    ? "اختيار"
+                    : "Select"}
+
+                </div>
+
+              </button>
+
+              {/* =================================================
+                  CONSULTATION
+              ================================================= */}
+
+              <button
+                type="button"
+                onClick={() =>
+                  handleAppointmentTypeSelect(
+                    AppointmentType.TreatmentSession
+                  )
+                }
+                className={`
+                  relative
+                  ${
+                    isArabic
+                      ? "text-right"
+                      : "text-left"
+                  }
+                  rounded-2xl
+                  p-6
+                  min-h-[220px]
+                  overflow-hidden
+                  border
+                  transition-all
+                  duration-200
+                  ${
+                    selectedAppointmentType ===
+                    AppointmentType.TreatmentSession
+                      ? "border-2 border-[#1d324e] bg-[#eef3f7] shadow-md"
+                      : "border-[#c4c6ce]/50 bg-white hover:border-[#1d324e] hover:shadow-sm"
+                  }
+                `}
+              >
+
+                <div
+                  className="
+                    absolute
+                    -right-10
+                    -top-10
+                    w-32
+                    h-32
+                    rounded-full
+                    bg-[#fed488]
+                    opacity-20
+                  "
+                />
+
+                <div
+                  className={`
+                    relative
+                    w-14
+                    h-14
+                    rounded-xl
+                    flex
+                    items-center
+                    justify-center
+                    mb-6
+                    ${
+                      selectedAppointmentType ===
+                      AppointmentType.TreatmentSession
+                        ? "bg-[#1d324e] text-white"
+                        : "bg-[#eef3f7] text-[#1d324e]"
+                    }
+                  `}
+                >
+                  <Info
+                    size={28}
+                    strokeWidth={1.8}
+                  />
+                </div>
+
+                <div className="relative z-10">
+
+                  <h3 className="text-[19px] font-semibold text-[#1d324e]">
+                    {isArabic
+                      ? "اعادة الكشف"
+                      : "Re-Checkup"}
+                  </h3>
+
+                  <p className="text-[13px] text-[#74777e] mt-2 leading-6">
+                    {isArabic
+                      ? "مناقشة حالتك مع الطبيب والحصول على التوجيه المناسب."
+                      : "Discuss your condition with the doctor and receive appropriate guidance."}
+                  </p>
+
+                </div>
+
+                <div
+                  className={`
+                    absolute
+                    bottom-5
+                    ${
+                      isArabic
+                        ? "left-6"
+                        : "right-6"
+                    }
+                    flex
+                    items-center
+                    gap-2
+                    text-[12px]
+                    font-semibold
+                    ${
+                      selectedAppointmentType ===
+                      AppointmentType.TreatmentSession
+                        ? "text-[#1d324e]"
+                        : "text-[#74777e]"
+                    }
+                  `}
+                >
+
+                  {selectedAppointmentType ===
+                    AppointmentType.TreatmentSession && (
+                    <span className="w-5 h-5 rounded-full bg-[#1d324e] text-white flex items-center justify-center">
+                      <Check size={13} />
+                    </span>
+                  )}
+
+                  {selectedAppointmentType ===
+                  AppointmentType.TreatmentSession
+                    ? isArabic
+                      ? "تم الاختيار"
+                      : "Selected"
+                    : isArabic
+                    ? "اختيار"
+                    : "Select"}
+
+                </div>
+
+              </button>
 
             </div>
+
+            {/* ERROR */}
+
+            {appointmentError && (
+              <div className="mt-5 bg-[#fed488]/20 border border-[#fed488]/50 rounded-lg p-4 text-[13px] text-[#775a19]">
+                {appointmentError}
+              </div>
+            )}
 
           </section>
         )}
@@ -1282,22 +1419,18 @@ function Booking() {
 
             </div>
 
-            {/* SELECTED SERVICE */}
+            {/* APPOINTMENT INFO */}
 
             <div className="mb-5 bg-[#fed488]/20 rounded-lg p-3 border border-[#fed488]/50">
 
               <p className="text-[12px] text-[#775a19] font-semibold uppercase tracking-wider">
-                {t(
-                  "home.booking.doctor.selectedService"
-                )}
+                {isArabic
+                  ? "نوع الموعد"
+                  : "Appointment Type"}
               </p>
 
               <p className="text-[15px] text-[#1d324e] font-semibold mt-1">
-                {selectedServiceData
-                  ? getServiceTitle(
-                      selectedServiceData.id
-                    )
-                  : ""}
+                {getAppointmentTypeLabel()}
               </p>
 
             </div>
@@ -1346,13 +1479,21 @@ function Booking() {
             <div className="space-y-4">
 
               {doctors.map(
-                (doctor) => {
+  (doctor) => {
 
-                  const isSelected =
-                    selectedDoctorId ===
-                    doctor.id;
+    const isSelected =
+      selectedDoctorId ===
+      doctor.id;
 
-                  return (
+    const translatedDoctor =
+      getDoctorTranslation(
+        doctor.id,
+        doctor.name,
+        doctor.bio,
+        doctor.specialty
+      );
+
+    return (
                     <button
                       key={doctor.id}
                       type="button"
@@ -1373,28 +1514,44 @@ function Booking() {
                     >
 
                       <div className="w-20 h-20 rounded-full overflow-hidden shrink-0 bg-gradient-to-br from-[#1d324e] to-[#344966] flex items-center justify-center">
-  <span className="text-white text-[22px] font-semibold" style={{ fontFamily: "'Manrope', sans-serif" }}>
-    {doctor.name?.split(" ").map(n => n[0]).slice(0, 2).join("")}
-  </span>
-</div>
+
+                        <span
+                          className="text-white text-[22px] font-semibold"
+                          style={{
+                            fontFamily:
+                              "'Manrope', sans-serif",
+                          }}
+                        >
+                          {doctor.name
+                            ?.split(" ")
+                            .map(
+                              (n) => n[0]
+                            )
+                            .slice(0, 2)
+                            .join("")}
+                        </span>
+
+                      </div>
 
                       <div className="flex-grow">
 
                         <h2 className="text-[18px] font-semibold text-[#1d324e]">
-                          {doctor.name}
+                          {translatedDoctor.name}
                         </h2>
 
                         <p className="flex items-center gap-2 text-[13px] text-[#74777e] mt-2">
 
-                          <Stethoscope size={18} />
+                          <Stethoscope
+                            size={18}
+                          />
 
-                          {doctor.specialty}
+                          {translatedDoctor.specialty}
 
                         </p>
 
                         {doctor.bio && (
                           <p className="text-[12px] text-[#74777e] mt-2 line-clamp-2">
-                            {doctor.bio}
+                            {translatedDoctor.bio}
                           </p>
                         )}
 
@@ -1426,32 +1583,42 @@ function Booking() {
 
             {/* AVAILABILITY INFO */}
 
-            {selectedDoctorData && (
-              <div className="mt-4 bg-[#fed488]/20 rounded-lg p-3 flex items-start gap-3 border border-[#fed488]/50">
+            {selectedDoctorData && (() => {
+  const translatedDoctor =
+    getDoctorTranslation(
+      selectedDoctorData.id,
+      selectedDoctorData.name,
+      selectedDoctorData.bio,
+      selectedDoctorData.specialty
+    );
 
-                <Info
-                  size={18}
-                  className="text-[#775a19]"
-                />
+  return (
+    <div className="mt-4 bg-[#fed488]/20 rounded-lg p-3 flex items-start gap-3 border border-[#fed488]/50">
 
-                <p className="text-[12px] text-[#1b1c1c]">
+      <Info
+        size={18}
+        className="text-[#775a19]"
+      />
 
-                  <strong>
-                    {t(
-                      "home.booking.doctor.doctorLabel"
-                    )}
-                  </strong>{" "}
+      <p className="text-[12px] text-[#1b1c1c]">
 
-                  {selectedDoctorData.name}
+        <strong>
+          {t(
+            "home.booking.doctor.doctorLabel"
+          )}
+        </strong>{" "}
 
-                  {" — "}
+        {translatedDoctor.name}
 
-                  {selectedDoctorData.specialty}
+        {" — "}
 
-                </p>
+        {translatedDoctor.specialty}
 
-              </div>
-            )}
+      </p>
+
+    </div>
+  );
+})()}
 
           </section>
         )}
@@ -1480,17 +1647,33 @@ function Booking() {
 
                 <div>
 
-                  <h2 className="text-[18px] font-semibold text-[#1d324e]">
-                    {selectedDoctorData?.name}
-                  </h2>
+                  {selectedDoctorData && (() => {
+  const translatedDoctor =
+    getDoctorTranslation(
+      selectedDoctorData.id,
+      selectedDoctorData.name,
+      selectedDoctorData.bio,
+      selectedDoctorData.specialty
+    );
 
-                  <p className="flex items-center gap-2 text-[13px] text-[#74777e] mt-1">
+  return (
+    <>
+      <h2 className="text-[18px] font-semibold text-[#1d324e]">
+        {translatedDoctor.name}
+      </h2>
 
-                    <Stethoscope size={18} />
+      <p className="flex items-center gap-2 text-[13px] text-[#74777e] mt-1">
 
-                    {selectedDoctorData?.specialty}
+        <Stethoscope
+          size={18}
+        />
 
-                  </p>
+        {translatedDoctor.specialty}
+
+      </p>
+    </>
+  );
+})()}
 
                 </div>
 
@@ -1529,9 +1712,13 @@ function Booking() {
                       aria-label="Previous month"
                     >
                       {isArabic ? (
-                        <ChevronRight size={20} />
+                        <ChevronRight
+                          size={20}
+                        />
                       ) : (
-                        <ChevronLeft size={20} />
+                        <ChevronLeft
+                          size={20}
+                        />
                       )}
                     </button>
 
@@ -1544,9 +1731,13 @@ function Booking() {
                       aria-label="Next month"
                     >
                       {isArabic ? (
-                        <ChevronLeft size={20} />
+                        <ChevronLeft
+                          size={20}
+                        />
                       ) : (
-                        <ChevronRight size={20} />
+                        <ChevronRight
+                          size={20}
+                        />
                       )}
                     </button>
 
@@ -1993,23 +2184,30 @@ function Booking() {
 
               <div className="space-y-3 text-[13px]">
 
+                {/* APPOINTMENT TYPE */}
+
                 <div className="flex justify-between gap-4">
 
                   <span className="text-[#74777e]">
-                    {t(
-                      "home.booking.patient.service"
-                    )}
+                    {isArabic
+                      ? "نوع الموعد"
+                      : "Appointment Type"}
                   </span>
 
                   <span className="font-semibold text-[#1d324e] text-right">
-                    {selectedServiceData
-                      ? getServiceTitle(
-                          selectedServiceData.id
-                        )
-                      : ""}
-                  </span>
+  {selectedDoctorData
+    ? getDoctorTranslation(
+        selectedDoctorData.id,
+        selectedDoctorData.name,
+        selectedDoctorData.bio,
+        selectedDoctorData.specialty
+      ).name
+    : "-"}
+</span>
 
                 </div>
+
+                {/* DOCTOR */}
 
                 <div className="flex justify-between gap-4">
 
@@ -2026,6 +2224,8 @@ function Booking() {
                   </span>
 
                 </div>
+
+                {/* DATE */}
 
                 <div className="flex justify-between gap-4">
 
@@ -2051,6 +2251,8 @@ function Booking() {
                   </span>
 
                 </div>
+
+                {/* TIME */}
 
                 <div className="flex justify-between gap-4">
 
@@ -2149,6 +2351,22 @@ function Booking() {
 
               </div>
 
+              {/* APPOINTMENT TYPE */}
+
+              <div className="p-5 border-b border-[#e4e2e1]">
+
+                <p className="text-[11px] uppercase tracking-wider font-semibold text-[#74777e]">
+                  {isArabic
+                    ? "نوع الموعد"
+                    : "Appointment Type"}
+                </p>
+
+                <p className="text-[16px] font-semibold text-[#1d324e] mt-2">
+                  {getAppointmentTypeLabel()}
+                </p>
+
+              </div>
+
               {/* DOCTOR */}
 
               <div className="p-5 border-b border-[#e4e2e1]">
@@ -2160,8 +2378,14 @@ function Booking() {
                 </p>
 
                 <p className="text-[16px] font-semibold text-[#1d324e] mt-2">
-                  {createdAppointment?.doctorName ||
-                    selectedDoctorData?.name}
+                  {selectedDoctorData
+  ? getDoctorTranslation(
+      selectedDoctorData.id,
+      selectedDoctorData.name,
+      selectedDoctorData.bio,
+      selectedDoctorData.specialty
+    ).name
+  : createdAppointment?.doctorName || "-"}
                 </p>
 
               </div>
@@ -2281,9 +2505,9 @@ function Booking() {
           <span>
 
             {currentStep === 1
-              ? t(
-                  "home.booking.buttons.continueToDoctor"
-                )
+              ? isArabic
+                ? "اختيار الطبيب"
+                : "Choose Doctor"
               : currentStep === 2
               ? t(
                   "home.booking.buttons.continueToDateTime"

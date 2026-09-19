@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useLanguage } from "../../i18n/LanguageContext";
+import logo from "../../assets/logo.png"; // <-- save the attached logo.png here
 import "./Header.css";
 
 interface IconProps {
@@ -25,11 +26,10 @@ function Icon({ name, size, fill, className }: IconProps) {
 }
 
 /* =========================================================
-   CLINIC PHONE NUMBERS
+   CLINIC PHONE NUMBER
 ========================================================= */
 
 const CLINIC_PHONE = "+20 127 643 9959";
-const EMERGENCY_PHONE = "+20 127 643 9959";
 
 /* =========================================================
    NAV LINKS
@@ -227,13 +227,8 @@ export default function Header() {
   };
 
   /* =========================================================
-     Phone links
+     Phone link
   ========================================================= */
-
-  const emergencyHref = `tel:${EMERGENCY_PHONE.replace(
-    /\s/g,
-    ""
-  )}`;
 
   const phoneHref = `tel:${CLINIC_PHONE.replace(
     /\s/g,
@@ -242,112 +237,55 @@ export default function Header() {
 
   return (
     <header className="ek-header">
+{/* =====================================================
+    TOP BAR
+===================================================== */}
+       <div className="ek-topbar lg-flex">
 
-      {/* =====================================================
-          TOP INFO BAR
-      ===================================================== */}
-
-      <div className="ek-topbar">
         <div className="ek-container ek-topbar-inner">
-
-          {/* LEFT */}
 
           <div className="ek-topbar-left">
 
             <span className="ek-topbar-item">
-              <Icon
-                name="location_on"
-                size={16}
-              />
-
-              <span>
-                {t("header.clinicAddress")}
-              </span>
+              <Icon name="location_on" size={16} />
+              <span>{t("header.clinicAddress")}</span>
             </span>
 
             <span className="ek-topbar-item">
-              <Icon
-                name="schedule"
-                size={16}
-              />
-
-              <span>
-                {t("header.workingHours")}
-              </span>
+              <Icon name="schedule" size={16} />
+              <span>{t("header.workingHours")}</span>
             </span>
 
           </div>
 
-          {/* RIGHT */}
-
           <div className="ek-topbar-right">
 
-            {/* CLINIC PHONE */}
-
-            <a
-              className="ek-topbar-phone"
-              href={phoneHref}
-            >
-              <Icon
-                name="call"
-                size={16}
-              />
-
-              <span dir="ltr">
-                {CLINIC_PHONE}
-              </span>
+            <a className="ek-topbar-item" href={phoneHref}>
+              <Icon name="call" size={16} />
+              <span dir="ltr">{CLINIC_PHONE}</span>
             </a>
 
-            {/* EMERGENCY */}
-
-            <a
-              className="ek-topbar-emergency"
-              href={emergencyHref}
-            >
-              <span className="ek-topbar-emergency-dot" />
-
-              <Icon
-                name="emergency"
-                size={16}
-              />
-
+            <a className="ek-topbar-emergency" href={phoneHref}>
+              <Icon name="emergency" size={16} fill />
               <span>
-                {t("header.emergencyLabel")}:{" "}
-
-                <span dir="ltr">
-                  {EMERGENCY_PHONE}
-                </span>
+                {t("header.emergencyLabel")}: <span dir="ltr">{CLINIC_PHONE}</span>
               </span>
             </a>
-
-            {/* LANGUAGE */}
 
             <div className="ek-topbar-lang">
 
               <button
                 type="button"
-                className={
-                  lang === "en"
-                    ? "active"
-                    : ""
-                }
-                onClick={() =>
-                  setLang("en")
-                }
+                className={lang === "en" ? "active" : ""}
+                onClick={() => setLang("en")}
               >
                 En
               </button>
 
               <button
                 type="button"
-                className={
-                  lang === "ar"
-                    ? "active"
-                    : ""
-                }
-                onClick={() =>
-                  setLang("ar")
-                }
+                className={lang === "ar" ? "active" : ""}
+                onClick={() => setLang("ar")}
               >
                 عربي
               </button>
@@ -355,8 +293,12 @@ export default function Header() {
             </div>
 
           </div>
+
         </div>
+
       </div>
+
+
 
       {/* =====================================================
           MAIN HEADER
@@ -396,7 +338,8 @@ export default function Header() {
               />
             </button>
 
-            {/* LOGO */}
+            {/* LOGO — image already contains the clinic name/mark,
+                so no separate text label is rendered next to it. */}
 
             <a
               href="/"
@@ -406,14 +349,30 @@ export default function Header() {
               }
             >
               <img
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNcwU5RiVn0HTHmU2U1u3d1VTlRtOOXXjHxSBMjrL0LqFHxJ6fxbE7YlE4iBx9Nbz4gkweZ-5MZrjbDXzRMUYeEyuwLuA122Bm0uUpQy9DC5EaPq6WlYh2LP89NktybWVhANLT_xLkz40vzNxyAMJMCNVLplDyGtwlojYXTrLx2hEEuf0omuuKLQucZCYxgrS_u1RGTJ7Bm9x1MU4U0ZeoON9j-sitQxtawGIfOfPufWOsHVzPgePGCIulnAKsdx5UxYQ"
-                alt="ELKAMAL Dental Clinic Logo"
+                src={logo}
+                alt="ELKAMAL Dental Clinic"
+              />
+            </a>
+
+            {/* CLINIC PHONE — next to the logo, replaces the old
+                separate top info bar entirely. */}
+
+            {/* <a
+              className="ek-header-phone"
+              href={phoneHref}
+            >
+              <Icon
+                name="call"
+                size={16}
               />
 
-              <span className="ek-logo-text">
-                {t("header.logoText")}
+              <span
+                className="ek-header-phone-number"
+                dir="ltr"
+              >
+                {CLINIC_PHONE}
               </span>
-            </a>
+            </a> */}
 
           </div>
 
@@ -449,6 +408,41 @@ export default function Header() {
               )}
 
             </nav>
+
+            {/* LANGUAGE — desktop only, replaces the toggle that
+                used to live in the removed top bar. */}
+
+            {/* <div className="ek-header-lang lg-flex">
+
+              <button
+                type="button"
+                className={
+                  lang === "en"
+                    ? "active"
+                    : ""
+                }
+                onClick={() =>
+                  setLang("en")
+                }
+              >
+                En
+              </button>
+
+              <button
+                type="button"
+                className={
+                  lang === "ar"
+                    ? "active"
+                    : ""
+                }
+                onClick={() =>
+                  setLang("ar")
+                }
+              >
+                عربي
+              </button>
+
+            </div> */}
 
             {/* APPOINTMENTS */}
 
@@ -692,42 +686,6 @@ export default function Header() {
 
             </nav>
 
-            {/* MOBILE CLINIC INFO */}
-
-            <div className="ek-mobile-info">
-
-              <span className="ek-mobile-info-item">
-
-                <Icon
-                  name="location_on"
-                  size={16}
-                />
-
-                <span>
-                  {t(
-                    "header.clinicAddress"
-                  )}
-                </span>
-
-              </span>
-
-              <span className="ek-mobile-info-item">
-
-                <Icon
-                  name="schedule"
-                  size={16}
-                />
-
-                <span>
-                  {t(
-                    "header.workingHours"
-                  )}
-                </span>
-
-              </span>
-
-            </div>
-
             {/* MOBILE LANGUAGE */}
 
             <div className="ek-mobile-lang">
@@ -761,46 +719,6 @@ export default function Header() {
               </button>
 
             </div>
-
-            {/* MOBILE PHONE */}
-
-            <a
-              className="ek-mobile-phone"
-              href={phoneHref}
-            >
-              <Icon
-                name="call"
-                size={18}
-              />
-
-              <span dir="ltr">
-                {CLINIC_PHONE}
-              </span>
-            </a>
-
-            {/* MOBILE EMERGENCY */}
-
-            <a
-              className="ek-mobile-emergency"
-              href={emergencyHref}
-            >
-              <span className="ek-topbar-emergency-dot" />
-
-              <Icon
-                name="emergency"
-                size={18}
-              />
-
-              <span>
-                {t(
-                  "header.emergencyLabel"
-                )}:{" "}
-
-                <span dir="ltr">
-                  {EMERGENCY_PHONE}
-                </span>
-              </span>
-            </a>
 
           </div>
         )}
