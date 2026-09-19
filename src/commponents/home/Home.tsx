@@ -4,11 +4,10 @@ import { useLanguage } from "../../i18n/LanguageContext";
 import { doctorTranslations } from "../../i18n/doctorTranslations";
 import { useClinicData } from "../../constant/ClinicDataContext";
 import doctorAhmadImage from "../../assets/prof.ahmed.jpeg";
-import doctorMichaelImage from "../../assets/prof.micheal.jpeg"
+import doctorMichaelImage from "../../assets/prof.micheal.jpeg";
+import heroImage from "../../assets/hero1.jpeg";
 import "./Home.css";
 import "../gallery/Gallery.css";
-
-
 
 // image prof of doctor
 
@@ -16,6 +15,7 @@ const doctorImages: Record<string, string> = {
   "366f7cbd-295d-41b8-9335-6fd9fcfb39da": doctorAhmadImage,
   "5caec077-5107-44d6-bc4b-78f8336334b6": doctorMichaelImage,
 };
+
 // =========================================================
 // SERVICES META
 // =========================================================
@@ -47,12 +47,6 @@ const MAX_HOME_CASES = 8;
 // =========================================================
 
 const CASE_CAROUSEL_INTERVAL_MS = 3000;
-
-// =========================================================
-// FORMAT SPECIALTY
-// =========================================================
-
-
 
 // =========================================================
 // ICON
@@ -282,13 +276,6 @@ function useAutoScrollCarousel(intervalMs: number) {
 }
 
 // =========================================================
-// HERO IMAGE
-// =========================================================
-
-const HERO_IMAGE_SRC =
-  "src/assets/hero1.jpeg";
-
-// =========================================================
 // CLINIC PHONE
 // =========================================================
 
@@ -453,7 +440,7 @@ export default function ElkamalDentalClinic() {
           <div className="ek-hero-bg">
 
             <img
-              src={HERO_IMAGE_SRC}
+              src={heroImage}
               alt=""
               className="ek-hero-bg-image"
             />
@@ -1231,12 +1218,15 @@ export default function ElkamalDentalClinic() {
                       key={d.id}
                     >
 
-                     <div className="ek-doctor-photo">
-  <img
-    src={doctorImages[d.id]}
-    alt={`Portrait of ${translatedDoctor.name}`}
-  />
-</div>
+                      <div className="ek-doctor-photo">
+
+                        <img
+                          src={doctorImages[d.id]}
+                          alt={`Portrait of ${translatedDoctor.name}`}
+                        />
+
+                      </div>
+
                       <div className="ek-doctor-info">
 
                         <div className="ek-doctor-heading">
@@ -1248,7 +1238,9 @@ export default function ElkamalDentalClinic() {
                           </h3>
 
                           <span className="ek-doctor-badge">
+
                             {translatedDoctor.specialty}
+
                           </span>
 
                         </div>
@@ -1260,7 +1252,9 @@ export default function ElkamalDentalClinic() {
                           />
 
                           <span>
+
                             {translatedDoctor.bio}
+
                           </span>
 
                         </div>
