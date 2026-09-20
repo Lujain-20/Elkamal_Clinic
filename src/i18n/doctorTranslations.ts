@@ -32,7 +32,7 @@ export const doctorTranslations: Record<
 
     "85fae94d-8ecc-456a-8e61-f1b734e23fcd": {
       name: "د. مايكل كمال",
-      bio: "أخصائية تجميل وتركيبات الأسنان",
+      bio: "أخصائي تجميل وتركيبات الأسنان",
       specialty: "تجميل وتركيبات الأسنان",
     },
   },
