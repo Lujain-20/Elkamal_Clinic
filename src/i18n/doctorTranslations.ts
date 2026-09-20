@@ -10,13 +10,13 @@ export const doctorTranslations: Record<
   >
 > = {
   en: {
-    "366f7cbd-295d-41b8-9335-6fd9fcfb39da": {
+    "b7c97761-72b9-4f86-9ee9-11e4bdb9771e": {
       name: "Dr. Ahmad Ibrahim",
-      bio: "Orthodontic consultant with 10 years of experience.",
+      bio: "British Fellowship in Orthodontics",
       specialty: "Orthodontics",
     },
 
-    "5caec077-5107-44d6-bc4b-78f8336334b6": {
+    "85fae94d-8ecc-456a-8e61-f1b734e23fcd": {
       name: "Dr. Michael Kamal",
       bio: "Specialist in cosmetic dentistry and dental restorations.",
       specialty: "Cosmetic & Restorative Dentistry",
@@ -24,13 +24,13 @@ export const doctorTranslations: Record<
   },
 
   ar: {
-    "366f7cbd-295d-41b8-9335-6fd9fcfb39da": {
+    "b7c97761-72b9-4f86-9ee9-11e4bdb9771e": {
       name: "د. أحمد ابراهيم",
-      bio: "استشاري تقويم أسنان بخبرة 10 سنين",
+      bio: "حاصل على الزمالة البريطانية لتقويم الاسنان",
       specialty: "تقويم الأسنان",
     },
 
-    "5caec077-5107-44d6-bc4b-78f8336334b6": {
+    "85fae94d-8ecc-456a-8e61-f1b734e23fcd": {
       name: "د. مايكل كمال",
       bio: "أخصائية تجميل وتركيبات الأسنان",
       specialty: "تجميل وتركيبات الأسنان",

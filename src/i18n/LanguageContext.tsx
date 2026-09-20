@@ -37,11 +37,11 @@ function getNested(source: unknown, path: string): unknown {
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(() => {
-    if (typeof window === "undefined") return "en";
+    if (typeof window === "undefined") return "ar";
 
     const stored = window.localStorage.getItem(STORAGE_KEY);
 
-    return stored === "ar" || stored === "en" ? stored : "en";
+    return stored === "ar" || stored === "en" ? stored : "ar";
   });
 
   const dir: "ltr" | "rtl" = lang === "ar" ? "rtl" : "ltr";
